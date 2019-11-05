@@ -9,7 +9,17 @@
         android:id="@+id/nav_home"
         android:name="emilsoft.hackernews.ui.home.HomeFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_home_to_nav_story"
+            app:destination="@id/nav_story" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_story"
+        android:name="emilsoft.hackernews.ui.home.StoryFragment"
+        android:label="Story"
+        tools:layout="@layout/fragment_story" />
 
     <fragment
         android:id="@+id/nav_gallery"
