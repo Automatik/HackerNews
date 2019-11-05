@@ -1,6 +1,34 @@
 package emilsoft.hackernews.api;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 public class Ask extends Item {
+
+    public static final Parcelable.Creator<Ask> CREATOR = new Parcelable.Creator<Ask>() {
+
+        @Override
+        public Ask createFromParcel(Parcel parcel) {
+            return new Ask(parcel);
+        }
+
+        @Override
+        public Ask[] newArray(int size) {
+            return new Ask[size];
+        }
+    };
+
+    Ask(){}
+
+    public Ask(Parcel in) {
+        this.descendants = in.readInt();
+        this.kids = new long[in.readInt()];
+        in.readLongArray(kids);
+        this.score = in.readInt();
+        this.text = in.readString();
+        this.title = in.readString();
+        this.url = in.readString();
+    }
 
     /**
      * In the case of stories or polls, the total comment count.
@@ -54,5 +82,18 @@ public class Ask extends Item {
 
     public String getUrl() {
         return url;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeInt(descendants);
+        dest.writeInt(kids.length);
+        dest.writeLongArray(kids);
+        dest.writeInt(score);
+        dest.writeString(text);
+        dest.writeString(title);
+        dest.writeString(url);
+
     }
 }

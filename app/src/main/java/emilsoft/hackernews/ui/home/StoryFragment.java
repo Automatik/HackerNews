@@ -21,6 +21,7 @@ import emilsoft.hackernews.MainViewModel;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.RetrofitHelper;
+import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.tree.GenericTree;
 import emilsoft.hackernews.tree.GenericTreeNode;
 import retrofit2.Call;
@@ -35,13 +36,14 @@ import static emilsoft.hackernews.MainActivity.TAG;
 
 public class StoryFragment extends Fragment {
 
-    public static final String ARG_URL = "argument_url";
-    public static final String ARG_USER = "argument_user";
-    public static final String ARG_TITLE = "argument_title";
-    public static final String ARG_TIME = "argument_time";
-    public static final String ARG_NUM_COMMENTS = "argument_num_comments";
-    public static final String ARG_POINTS = "argument_points";
-    public static final String ARG_COMMENTS = "argument_comments";
+//    public static final String ARG_URL = "argument_url";
+//    public static final String ARG_USER = "argument_user";
+//    public static final String ARG_TITLE = "argument_title";
+//    public static final String ARG_TIME = "argument_time";
+//    public static final String ARG_NUM_COMMENTS = "argument_num_comments";
+//    public static final String ARG_POINTS = "argument_points";
+//    public static final String ARG_COMMENTS = "argument_comments";
+    public static final String ARG_STORY = "argument_story";
 
     private WebView mWebView;
     private TextView titleText, userText, urlText, timeText, pointsText, numCommentsText;
@@ -50,6 +52,7 @@ public class StoryFragment extends Fragment {
     private int mPoints, mNumComments;
     private long mTime;
     private long[] mComments;
+    private Story mStory;
 
     private MainViewModel mainViewModel;
     private HackerNewsApi hackerNewsApi;
@@ -69,13 +72,25 @@ public class StoryFragment extends Fragment {
 
         Bundle args = getArguments();
         if(args != null) {
-            mUrl = args.getString(ARG_URL);
-            mUser = args.getString(ARG_USER);
-            mTitle = args.getString(ARG_TITLE);
-            mPoints = args.getInt(ARG_POINTS);
-            mNumComments = args.getInt(ARG_NUM_COMMENTS);
-            mTime = args.getLong(ARG_TIME);
-            mComments = args.getLongArray(ARG_COMMENTS);
+//            mUrl = args.getString(ARG_URL);
+//            mUser = args.getString(ARG_USER);
+//            mTitle = args.getString(ARG_TITLE);
+//            mPoints = args.getInt(ARG_POINTS);
+//            mNumComments = args.getInt(ARG_NUM_COMMENTS);
+//            mTime = args.getLong(ARG_TIME);
+//            mComments = args.getLongArray(ARG_COMMENTS);
+            mStory = args.getParcelable(ARG_STORY);
+            if(mStory == null) {
+                Log.v(TAG, "Story is null");
+                return;
+            }
+            mUrl = mStory.getUrl();
+            mTitle = mStory.getTitle();
+            mUser = mStory.getUser();
+            mPoints = mStory.getScore();
+            mNumComments = mStory.getDescendants();
+            mTime = mStory.getTime();
+            mComments = mStory.getKids();
 
             if(mComments == null) {
                 Log.v(TAG, "Comments are null");

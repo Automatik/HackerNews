@@ -86,16 +86,17 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
         @Override
         public void onClick(View view) {
-            String url = mStory.getUrl();
+            //String url = mStory.getUrl();
             NavController navController = Navigation.findNavController(view);
             Bundle args = new Bundle();
-            args.putString(StoryFragment.ARG_URL, url);
-            args.putString(StoryFragment.ARG_TITLE, mStory.getTitle());
-            args.putString(StoryFragment.ARG_USER, mStory.getUser());
-            args.putInt(StoryFragment.ARG_POINTS, mStory.getScore());
-            args.putLong(StoryFragment.ARG_TIME, mStory.getTime());
-            args.putInt(StoryFragment.ARG_NUM_COMMENTS, mStory.getDescendants());
-            args.putLongArray(StoryFragment.ARG_COMMENTS, mStory.getKids());
+            args.putParcelable(StoryFragment.ARG_STORY, mStory);
+//            args.putString(StoryFragment.ARG_URL, url);
+//            args.putString(StoryFragment.ARG_TITLE, mStory.getTitle());
+//            args.putString(StoryFragment.ARG_USER, mStory.getUser());
+//            args.putInt(StoryFragment.ARG_POINTS, mStory.getScore());
+//            args.putLong(StoryFragment.ARG_TIME, mStory.getTime());
+//            args.putInt(StoryFragment.ARG_NUM_COMMENTS, mStory.getDescendants());
+//            args.putLongArray(StoryFragment.ARG_COMMENTS, mStory.getKids());
             navController.navigate(R.id.action_nav_home_to_nav_story, args);
         }
     }
