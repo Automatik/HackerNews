@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="emilsoft.hackernews.ui.home.HomeFragment"
+        android:name="emilsoft.hackernews.fragment.HomeFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home" >
         <action
@@ -17,7 +17,7 @@
 
     <fragment
         android:id="@+id/nav_story"
-        android:name="emilsoft.hackernews.ui.home.StoryFragment"
+        android:name="emilsoft.hackernews.fragment.StoryFragment"
         android:label="Story"
         tools:layout="@layout/fragment_story" />
 

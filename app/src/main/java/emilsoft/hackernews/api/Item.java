@@ -6,6 +6,8 @@ import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Objects;
+
 public class Item implements Parcelable {
 
     public static final Parcelable.Creator<Item> CREATOR = new Parcelable.Creator<Item>() {
@@ -22,6 +24,10 @@ public class Item implements Parcelable {
     };
 
     Item(){}
+
+    Item(long id) {
+        this.id = id;
+    }
 
     public Item(Parcel in) {
         this.id = in.readLong();
@@ -114,5 +120,18 @@ public class Item implements Parcelable {
         dest.writeString(type.getType());
         dest.writeString(user);
         dest.writeLong(time);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return id == item.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

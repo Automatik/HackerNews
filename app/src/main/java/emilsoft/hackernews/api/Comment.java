@@ -20,6 +20,11 @@ public class Comment extends Item {
 
     public Comment(){}
 
+    //Necessary for searching the parent of a comment
+    public Comment(long id) {
+        super(id);
+    }
+
     public Comment(Parcel in) {
         this.kids = new long[in.readInt()];
         in.readLongArray(kids);
@@ -47,6 +52,22 @@ public class Comment extends Item {
      * The URL of the story.
      */
     private String url;
+
+    public long[] getKids() {
+        return kids;
+    }
+
+    public long getParent() {
+        return parent;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public String getUrl() {
+        return url;
+    }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {

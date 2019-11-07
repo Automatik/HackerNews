@@ -1,4 +1,4 @@
-package emilsoft.hackernews.ui.home;
+package emilsoft.hackernews.adapter;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -8,8 +8,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,10 +15,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.fragment.StoryFragment;
 
 import static emilsoft.hackernews.MainActivity.TAG;
 

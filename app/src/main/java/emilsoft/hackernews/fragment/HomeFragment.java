@@ -1,11 +1,10 @@
-package emilsoft.hackernews.ui.home;
+package emilsoft.hackernews.fragment;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
@@ -16,11 +15,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-import emilsoft.hackernews.MainActivity;
-import emilsoft.hackernews.MainViewModel;
+import emilsoft.hackernews.adapter.StoriesAdapter;
+import emilsoft.hackernews.viewmodel.HomeViewModel;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.api.HackerNewsApi;
-import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,14 +34,10 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerView;
     private StoriesAdapter adapter;
     private HomeViewModel homeViewModel;
-    private MainViewModel mainViewModel;
-    private HackerNewsApi hackerNewsApi;
-    //private final HackerNewsApi hackerNewsApi = RetrofitHelper.create(HackerNewsApi.class);
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         recyclerView = view.findViewById(R.id.articles_list);
         recyclerView.addOnScrollListener(onScrollListener);
@@ -54,7 +48,6 @@ public class HomeFragment extends Fragment {
 //                textView.setText(s);
 //            }
 //        });
-        hackerNewsApi = mainViewModel.hackerNewsApi;
         return view;
     }
 
@@ -65,10 +58,34 @@ public class HomeFragment extends Fragment {
             adapter = new StoriesAdapter(homeViewModel.topStories);
             recyclerView.setAdapter(adapter);
         }
-        getTopStoriesIds();
+        homeViewModel.getTopStoriesIds().observe(this, new Observer<List<Long>>() {
+            @Override
+            public void onChanged(List<Long> ids) {
+                homeViewModel.topStoriesIds.clear();
+                homeViewModel.topStoriesIds.addAll(ids);
+                homeViewModel.lastItemLoadedIndex = 0;
+                for(int i = 0; i < NUM_LOAD_ITEMS; i++)
+                    observeStory(ids.get(i));
+                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
+                Log.v(TAG, "Finished calling first batch");
+            }
+        });
+//        getTopStoriesIds();
     }
 
-    public void getTopStoriesIds() {
+    private void observeStory(long id) {
+        homeViewModel.getStory(id).observe(this, new Observer<Story>() {
+            @Override
+            public void onChanged(Story story) {
+                int pos = homeViewModel.topStories.size();
+                homeViewModel.topStories.add(story);
+                if(adapter != null)
+                    adapter.notifyItemInserted(pos);
+            }
+        });
+    }
+
+    /*public void getTopStoriesIds() {
         Call<List<Long>> call = hackerNewsApi.getTopStories();
         call.enqueue(topStoriesIdsCallback);
     }
@@ -131,7 +148,7 @@ public class HomeFragment extends Fragment {
         public void onFailure(Call<Story> call, Throwable t) {
             Log.v(TAG, "onFailure: "+t.getMessage());
         }
-    };
+    }; */
 
     private RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener() {
         @Override
@@ -143,7 +160,7 @@ public class HomeFragment extends Fragment {
                 //TODO Add an if condition for checking if the first load has finished
                 int startIndex = homeViewModel.lastItemLoadedIndex + 1;
                 for(int i = startIndex; i < startIndex + NUM_LOAD_ITEMS; i++)
-                    getTopStory(homeViewModel.topStoriesIds.get(i));
+                    observeStory(homeViewModel.topStoriesIds.get(i));
                 homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
             }
         }

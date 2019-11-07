@@ -1,4 +1,4 @@
-package emilsoft.hackernews.ui.home;
+package emilsoft.hackernews.fragment;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -6,24 +6,21 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.TreeMap;
-
-import emilsoft.hackernews.MainViewModel;
+import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.HackerNewsApi;
-import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
-import emilsoft.hackernews.tree.GenericTree;
-import emilsoft.hackernews.tree.GenericTreeNode;
+import emilsoft.hackernews.viewmodel.StoryViewModel;
 import retrofit2.Call;
 
 import emilsoft.hackernews.R;
@@ -47,28 +44,22 @@ public class StoryFragment extends Fragment {
 
     private WebView mWebView;
     private TextView titleText, userText, urlText, timeText, pointsText, numCommentsText;
+    private RecyclerView recyclerView;
+    private CommentsAdapter adapter;
 
     private String mUrl, mUser, mTitle;
     private int mPoints, mNumComments;
-    private long mTime;
+    private long mTime, mStoryId;
     private long[] mComments;
     private Story mStory;
 
-    private MainViewModel mainViewModel;
-    private HackerNewsApi hackerNewsApi;
-    private GenericTree<Comment> commentsTree;
+    private StoryViewModel storyViewModel;
 
-    //private final HackerNewsApi hackerNewsApi = RetrofitHelper.create(HackerNewsApi.class);
-
+    @SuppressLint("UseSparseArrays")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-        hackerNewsApi = mainViewModel.hackerNewsApi;
-        Comment root = new Comment();
-        GenericTreeNode<Comment> rootNode = new GenericTreeNode<>(root);
-        commentsTree = new GenericTree<>();
-        commentsTree.setRoot(rootNode);
+        storyViewModel = ViewModelProviders.of(this).get(StoryViewModel.class);
 
         Bundle args = getArguments();
         if(args != null) {
@@ -84,6 +75,7 @@ public class StoryFragment extends Fragment {
                 Log.v(TAG, "Story is null");
                 return;
             }
+            mStoryId = mStory.getId();
             mUrl = mStory.getUrl();
             mTitle = mStory.getTitle();
             mUser = mStory.getUser();
@@ -97,7 +89,9 @@ public class StoryFragment extends Fragment {
                 return;
             }
 
-            getComments();
+            for(long idComment : mComments)
+                observeComment(idComment);
+
         } else {
             mUrl = "www.example.com";
             mTitle = "Error Retrieving Story";
@@ -113,6 +107,7 @@ public class StoryFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_story, container, false);
+        recyclerView = view.findViewById(R.id.comments_list);
         titleText = view.findViewById(R.id.story_article_title);
         urlText = view.findViewById(R.id.story_article_url);
         userText = view.findViewById(R.id.story_article_user);
@@ -136,12 +131,65 @@ public class StoryFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if(storyViewModel.commentsList != null) {
+            adapter = new CommentsAdapter(storyViewModel.commentsList);
+            recyclerView.setAdapter(adapter);
+        }
     }
 
-    public void getComments() {
-        for(int i = 0; i < mComments.length; i++) {
-            Call<Comment> call = hackerNewsApi.getComment(mComments[i]);
-            call.enqueue(commentCallback);
+    private void observeComment(long id) {
+        storyViewModel.getComment(id).observe(this, new Observer<Comment>() {
+            @Override
+            public void onChanged(Comment comment) {
+                int pos = storyViewModel.commentsList.size();
+                Log.v(TAG, "Comments: "+(pos+1));
+                long idParent = comment.getParent();
+                if(idParent == mStoryId) {
+                    storyViewModel.commentsList.add(comment);
+                    if(adapter != null)
+                        adapter.notifyItemInserted(pos);
+                } else {
+                    Comment parent = new Comment(idParent);
+                    int index = storyViewModel.commentsList.indexOf(parent) + 1; //+1 after the parent
+                    storyViewModel.commentsList.add(index, comment);
+                    if(adapter != null)
+                        adapter.notifyItemInserted(index);
+                }
+                long[] kids = comment.getKids();
+                if(kids != null)
+                    for(long idComment : kids)
+                        observeComment(idComment);
+            }
+        });
+    }
+
+    /*private void getComment(long id) {
+        Call<Comment> call = hackerNewsApi.getComment(id);
+        call.enqueue(commentCallback);
+    }
+
+    private void updateKidsNumberLookup(Comment comment) {
+        int commentKids = comment.getKids().length;
+        long idComment = comment.getId();
+        storyViewModel.kidsNumberLookup.put(idComment, commentKids);
+        long idParent = comment.getParent();
+        Comment parent;
+        while((parent = storyViewModel.commentsMap.get(idParent)) != null) {
+            int nKids = storyViewModel.kidsNumberLookup.get(idParent);
+            storyViewModel.kidsNumberLookup.put(idParent, nKids + commentKids);
+            idParent = parent.getParent();
+        }
+    }
+
+    public Comment getComment(int position) {
+        long id = 0; //idRoot
+        int currentPosition = 0;
+        Comment root;
+        while(currentPosition == position) {
+            int nKids = storyViewModel.kidsNumberLookup.get(id);
+            if(currentPosition + nKids <= position) {
+                Comment c = storyViewModel.commentsMap.get(id);
+            }
         }
     }
 
@@ -156,6 +204,15 @@ public class StoryFragment extends Fragment {
             }
             Comment comment = response.body();
             Log.v(TAG, "Comment: "+comment.getId());
+            storyViewModel.commentsMap.put(comment.getId(), comment);
+//            if(adapter != null) {
+//                adapter.notifyItemInserted(0);
+//            }
+            long[] kids = comment.getKids();
+            if(kids != null) {
+                for(long idComment : kids)
+                    getComment(idComment);
+            }
         }
 
         @Override
@@ -163,7 +220,7 @@ public class StoryFragment extends Fragment {
         public void onFailure(Call<Comment> call, Throwable t) {
             Log.v(TAG, "onFailure: "+t.getMessage());
         }
-    };
+    }; */
 
 
 }
