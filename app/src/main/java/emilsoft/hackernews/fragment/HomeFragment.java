@@ -18,12 +18,7 @@ import java.util.List;
 import emilsoft.hackernews.adapter.StoriesAdapter;
 import emilsoft.hackernews.viewmodel.HomeViewModel;
 import emilsoft.hackernews.R;
-import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Story;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.internal.EverythingIsNonNull;
 
 import static emilsoft.hackernews.MainActivity.TAG;
 
@@ -61,6 +56,7 @@ public class HomeFragment extends Fragment {
         homeViewModel.getTopStoriesIds().observe(this, new Observer<List<Long>>() {
             @Override
             public void onChanged(List<Long> ids) {
+                Log.v(TAG, "Top Stories on Main Thread");
                 homeViewModel.topStoriesIds.clear();
                 homeViewModel.topStoriesIds.addAll(ids);
                 homeViewModel.lastItemLoadedIndex = 0;
@@ -84,71 +80,6 @@ public class HomeFragment extends Fragment {
             }
         });
     }
-
-    /*public void getTopStoriesIds() {
-        Call<List<Long>> call = hackerNewsApi.getTopStories();
-        call.enqueue(topStoriesIdsCallback);
-    }
-
-    public void getTopStory(long id) {
-        Call<Story> call = hackerNewsApi.getStory(id);
-        call.enqueue(topStoriesCallback);
-    }
-
-    private Callback<List<Long>> topStoriesIdsCallback = new Callback<List<Long>>() {
-
-        @Override
-        @EverythingIsNonNull
-        public void onResponse(Call<List<Long>> call, Response<List<Long>> response) {
-            if(!response.isSuccessful()) {
-                Log.v(TAG, "Code: "+response.code());
-                return;
-            }
-            List<Long> ids = response.body();
-            if(ids == null) {
-                Log.v(TAG, "List of Top Stories ids is null");
-                return;
-            }
-            //Log.v(TAG, "IDS's size: " + ids.size() + ", "+ ids.toString());
-            homeViewModel.topStoriesIds.clear();
-            homeViewModel.topStoriesIds.addAll(ids);
-            homeViewModel.lastItemLoadedIndex = 0;
-
-            for(int i = 0; i < NUM_LOAD_ITEMS; i++) {
-                getTopStory(ids.get(i));
-            }
-            homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
-            Log.v(TAG, "Finished loading first batch");
-        }
-
-        @Override
-        @EverythingIsNonNull
-        public void onFailure(Call<List<Long>> call, Throwable t) {
-            Log.v(TAG, "onFailure: "+t.getMessage());
-        }
-    };
-
-    private Callback<Story> topStoriesCallback = new Callback<Story>() {
-
-        @Override
-        @EverythingIsNonNull
-        public void onResponse(Call<Story> call, Response<Story> response) {
-            if(!response.isSuccessful()) {
-                Log.v(TAG, "Code: "+response.code());
-                return;
-            }
-            int pos = homeViewModel.topStories.size();
-            homeViewModel.topStories.add(response.body());
-            if(adapter != null)
-                adapter.notifyItemInserted(pos);
-        }
-
-        @Override
-        @EverythingIsNonNull
-        public void onFailure(Call<Story> call, Throwable t) {
-            Log.v(TAG, "onFailure: "+t.getMessage());
-        }
-    }; */
 
     private RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener() {
         @Override

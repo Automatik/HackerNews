@@ -63,13 +63,6 @@ public class StoryFragment extends Fragment {
 
         Bundle args = getArguments();
         if(args != null) {
-//            mUrl = args.getString(ARG_URL);
-//            mUser = args.getString(ARG_USER);
-//            mTitle = args.getString(ARG_TITLE);
-//            mPoints = args.getInt(ARG_POINTS);
-//            mNumComments = args.getInt(ARG_NUM_COMMENTS);
-//            mTime = args.getLong(ARG_TIME);
-//            mComments = args.getLongArray(ARG_COMMENTS);
             mStory = args.getParcelable(ARG_STORY);
             if(mStory == null) {
                 Log.v(TAG, "Story is null");
@@ -162,65 +155,6 @@ public class StoryFragment extends Fragment {
             }
         });
     }
-
-    /*private void getComment(long id) {
-        Call<Comment> call = hackerNewsApi.getComment(id);
-        call.enqueue(commentCallback);
-    }
-
-    private void updateKidsNumberLookup(Comment comment) {
-        int commentKids = comment.getKids().length;
-        long idComment = comment.getId();
-        storyViewModel.kidsNumberLookup.put(idComment, commentKids);
-        long idParent = comment.getParent();
-        Comment parent;
-        while((parent = storyViewModel.commentsMap.get(idParent)) != null) {
-            int nKids = storyViewModel.kidsNumberLookup.get(idParent);
-            storyViewModel.kidsNumberLookup.put(idParent, nKids + commentKids);
-            idParent = parent.getParent();
-        }
-    }
-
-    public Comment getComment(int position) {
-        long id = 0; //idRoot
-        int currentPosition = 0;
-        Comment root;
-        while(currentPosition == position) {
-            int nKids = storyViewModel.kidsNumberLookup.get(id);
-            if(currentPosition + nKids <= position) {
-                Comment c = storyViewModel.commentsMap.get(id);
-            }
-        }
-    }
-
-    private Callback<Comment> commentCallback = new Callback<Comment>() {
-
-        @Override
-        @EverythingIsNonNull
-        public void onResponse(Call<Comment> call, Response<Comment> response) {
-            if(!response.isSuccessful()) {
-                Log.v(TAG, "Code: "+response.code());
-                return;
-            }
-            Comment comment = response.body();
-            Log.v(TAG, "Comment: "+comment.getId());
-            storyViewModel.commentsMap.put(comment.getId(), comment);
-//            if(adapter != null) {
-//                adapter.notifyItemInserted(0);
-//            }
-            long[] kids = comment.getKids();
-            if(kids != null) {
-                for(long idComment : kids)
-                    getComment(idComment);
-            }
-        }
-
-        @Override
-        @EverythingIsNonNull
-        public void onFailure(Call<Comment> call, Throwable t) {
-            Log.v(TAG, "onFailure: "+t.getMessage());
-        }
-    }; */
 
 
 }

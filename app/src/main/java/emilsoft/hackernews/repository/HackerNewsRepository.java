@@ -5,16 +5,20 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.util.List;
 
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.internal.EverythingIsNonNull;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+
 
 import static emilsoft.hackernews.MainActivity.TAG;
 
@@ -35,77 +39,96 @@ public class HackerNewsRepository {
 
     public LiveData<List<Long>> getTopStoriesIds() {
         final MutableLiveData<List<Long>> data = new MutableLiveData<>();
-        Call<List<Long>> call = hackerNewsApi.getTopStories();
-        call.enqueue(new Callback<List<Long>>() {
-            @EverythingIsNonNull
-            @Override
-            public void onResponse(Call<List<Long>> call, Response<List<Long>> response) {
-                if(!response.isSuccessful()) {
-                    Log.v(TAG, "Code: "+response.code());
-                    return;
-                }
-                List<Long> ids = response.body();
-                if(ids == null) {
-                    Log.v(TAG, "List of Top Stories ids is null");
-                    return;
-                }
-                data.setValue(ids);
-            }
+        hackerNewsApi.getTopStories()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Long>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
-            @EverythingIsNonNull
-            @Override
-            public void onFailure(Call<List<Long>> call, Throwable t) {
-                Log.v(TAG, "onFailure: "+t.getMessage());
-            }
-        });
+                    }
+
+                    @Override
+                    public void onNext(List<Long> ids) {
+                        if(ids == null) {
+                            Log.v(TAG, "List of Top Stories ids is null");
+                            return;
+                        }
+                        Log.v(TAG, "Top Stories retrieved");
+                        data.setValue(ids);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
 
         return data;
     }
 
     public LiveData<Story> getStory(long id) {
         final MutableLiveData<Story> data = new MutableLiveData<>();
-        Call<Story> call = hackerNewsApi.getStory(id);
-        call.enqueue(new Callback<Story>() {
-            @EverythingIsNonNull
-            @Override
-            public void onResponse(Call<Story> call, Response<Story> response) {
-                if(!response.isSuccessful()) {
-                    Log.v(TAG, "Code: "+response.code());
-                    return;
-                }
-                data.setValue(response.body());
-            }
+        hackerNewsApi.getStory(id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Story>() {
 
-            @EverythingIsNonNull
-            @Override
-            public void onFailure(Call<Story> call, Throwable t) {
-                Log.v(TAG, "onFailure: "+t.getMessage());
-            }
-        });
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
 
+                    @Override
+                    public void onComplete() {
+
+                    }
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Story story) {
+                        data.setValue(story);
+                    }
+                });
         return data;
     }
 
     public LiveData<Comment> getComment(long id) {
         final MutableLiveData<Comment> data = new MutableLiveData<>();
-        Call<Comment> call = hackerNewsApi.getComment(id);
-        call.enqueue(new Callback<Comment>() {
-            @EverythingIsNonNull
-            @Override
-            public void onResponse(Call<Comment> call, Response<Comment> response) {
-                if(!response.isSuccessful()) {
-                    Log.v(TAG, "Code: "+response.code());
-                    return;
-                }
-                data.setValue(response.body());
-            }
+        hackerNewsApi.getComment(id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Comment>() {
 
-            @EverythingIsNonNull
-            @Override
-            public void onFailure(Call<Comment> call, Throwable t) {
-                Log.v(TAG, "onFailure: "+t.getMessage());
-            }
-        });
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Comment comment) {
+                        data.setValue(comment);
+                    }
+                });
 
         return data;
     }
