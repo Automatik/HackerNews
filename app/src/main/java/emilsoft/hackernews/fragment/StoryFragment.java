@@ -2,6 +2,7 @@ package emilsoft.hackernews.fragment;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.LinkedList;
 
 import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.Utils;
@@ -135,15 +138,19 @@ public class StoryFragment extends Fragment {
             @Override
             public void onChanged(Comment comment) {
                 int pos = storyViewModel.commentsList.size();
-                Log.v(TAG, "Comments: "+(pos+1));
+                //Log.v(TAG, "Comments: "+(pos+1));
                 long idParent = comment.getParent();
                 if(idParent == mStoryId) {
+                    comment.setLevel(1);
                     storyViewModel.commentsList.add(comment);
                     if(adapter != null)
                         adapter.notifyItemInserted(pos);
                 } else {
                     Comment parent = new Comment(idParent);
-                    int index = storyViewModel.commentsList.indexOf(parent) + 1; //+1 after the parent
+                    int index = storyViewModel.commentsList.indexOf(parent);
+                    parent = storyViewModel.commentsList.get(index);
+                    comment.setLevel(parent.getLevel() + 1);
+                    index += 1; //+1 after the parent
                     storyViewModel.commentsList.add(index, comment);
                     if(adapter != null)
                         adapter.notifyItemInserted(index);

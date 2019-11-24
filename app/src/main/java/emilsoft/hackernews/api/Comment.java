@@ -23,6 +23,7 @@ public class Comment extends Item {
     //Necessary for searching the parent of a comment
     public Comment(long id) {
         super(id);
+        level = 0;
     }
 
     public Comment(Parcel in) {
@@ -31,6 +32,7 @@ public class Comment extends Item {
         this.parent = in.readLong();
         this.text = in.readString();
         this.url = in.readString();
+        this.level = in.readInt();
     }
 
     /**
@@ -53,6 +55,8 @@ public class Comment extends Item {
      */
     private String url;
 
+    private int level;
+
     public long[] getKids() {
         return kids;
     }
@@ -69,6 +73,12 @@ public class Comment extends Item {
         return url;
     }
 
+    public int getLevel() { return level; }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
@@ -77,5 +87,6 @@ public class Comment extends Item {
         dest.writeLong(parent);
         dest.writeString(text);
         dest.writeString(url);
+        dest.writeInt(level);
     }
 }
