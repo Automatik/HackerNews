@@ -36,16 +36,8 @@ import static emilsoft.hackernews.MainActivity.TAG;
 
 public class StoryFragment extends Fragment {
 
-//    public static final String ARG_URL = "argument_url";
-//    public static final String ARG_USER = "argument_user";
-//    public static final String ARG_TITLE = "argument_title";
-//    public static final String ARG_TIME = "argument_time";
-//    public static final String ARG_NUM_COMMENTS = "argument_num_comments";
-//    public static final String ARG_POINTS = "argument_points";
-//    public static final String ARG_COMMENTS = "argument_comments";
     public static final String ARG_STORY = "argument_story";
 
-    private WebView mWebView;
     private TextView titleText, userText, urlText, timeText, pointsText, numCommentsText;
     private RecyclerView recyclerView;
     private CommentsAdapter adapter;
@@ -57,6 +49,17 @@ public class StoryFragment extends Fragment {
     private Story mStory;
 
     private StoryViewModel storyViewModel;
+
+    //TODO Quando cambio orientamento dello schermo si creano copie dei commenti
+
+    public static StoryFragment newInstance(Story story) {
+
+        Bundle args = new Bundle();
+        args.putParcelable(ARG_STORY, story);
+        StoryFragment fragment = new StoryFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @SuppressLint("UseSparseArrays")
     @Override
@@ -98,7 +101,6 @@ public class StoryFragment extends Fragment {
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -117,10 +119,6 @@ public class StoryFragment extends Fragment {
         pointsText.setText(String.valueOf(mPoints));
         timeText.setText(Utils.getAbbreviatedTimeSpan(mTime));
         numCommentsText.setText(String.valueOf(mNumComments));
-        //mWebView = view.findViewById(R.id.webview_story);
-        //WebSettings webSettings = mWebView.getSettings();
-        //webSettings.setJavaScriptEnabled(true);
-        //mWebView.loadUrl(mUrl);
         return view;
     }
 

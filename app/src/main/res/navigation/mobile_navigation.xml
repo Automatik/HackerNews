@@ -11,9 +11,16 @@
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home" >
         <action
-            android:id="@+id/action_nav_home_to_nav_story"
-            app:destination="@id/nav_story" />
+            android:id="@+id/action_nav_home_to_nav_item"
+            app:destination="@id/nav_item" />
     </fragment>
+
+    <fragment
+        android:id="@+id/nav_item"
+        android:name="emilsoft.hackernews.fragment.ItemFragment"
+        android:label="Item"
+        tools:layout="@layout/viewpager_item"
+        />
 
     <fragment
         android:id="@+id/nav_story"
