@@ -84,7 +84,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         return (colorCodes != null) ? colorCodes[level % colorCodes.length] : 0;
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
 
         public final View mView;
         public final TextView mTime;

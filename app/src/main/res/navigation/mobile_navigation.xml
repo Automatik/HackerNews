@@ -11,8 +11,8 @@
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home" >
         <action
-            android:id="@+id/action_nav_home_to_nav_item"
-            app:destination="@id/nav_item" />
+            android:id="@+id/action_nav_home_to_nav_story"
+            app:destination="@id/nav_story" />
     </fragment>
 
     <fragment

@@ -1,10 +1,17 @@
 package emilsoft.hackernews;
 
+import android.app.Activity;
+import android.net.Uri;
 import android.os.Build;
 import android.text.Html;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.Log;
+
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
+
+import java.lang.ref.WeakReference;
 
 import static emilsoft.hackernews.MainActivity.TAG;
 
@@ -64,6 +71,19 @@ public class Utils {
             end--;
         }
         return charSequence.subSequence(0, end + 1);
+    }
+
+    public static void openWebUrl(WeakReference<Activity> activity, String url) {
+        Activity act = activity.get();
+        if(act == null)
+            return;
+        Uri uri = Uri.parse(url);
+        CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
+        //Set desired colors
+        intentBuilder.setToolbarColor(ContextCompat.getColor(act, R.color.colorPrimary));
+        intentBuilder.setSecondaryToolbarColor(ContextCompat.getColor(act, R.color.colorPrimaryDark));
+        CustomTabsIntent customTabsIntent = intentBuilder.build();
+        customTabsIntent.launchUrl(act, uri);
     }
 
 }

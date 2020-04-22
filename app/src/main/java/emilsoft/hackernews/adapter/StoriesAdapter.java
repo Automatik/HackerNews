@@ -1,5 +1,8 @@
 package emilsoft.hackernews.adapter;
 
+import android.app.Activity;
+import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -8,10 +11,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,9 +31,10 @@ import static emilsoft.hackernews.MainActivity.TAG;
 public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHolder> {
 
     private List<Story> stories;
+    private Context context;
 
     public StoriesAdapter(List<Story> stories) {
-        if(stories == null)
+        if (stories == null)
             this.stories = new ArrayList<>();
         else
             this.stories = stories;
@@ -38,7 +45,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.fragment_home_articles_list_item, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view, onStoryClickListener);
     }
 
     @Override
@@ -54,12 +61,26 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
     @Override
     public int getItemCount() {
-        if(stories != null)
+        if (stories != null)
             return stories.size();
         return 0;
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        context = recyclerView.getContext();
+    }
+
+    private OnStoryClickListener onStoryClickListener = new OnStoryClickListener() {
+        @Override
+        public void onStoryClick(String url) {
+            WeakReference<Activity> ref = new WeakReference<>((Activity) context);
+            Utils.openWebUrl(ref, url);
+        }
+    };
+
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public final View mView;
         public final TextView mTitle;
@@ -69,12 +90,24 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         public final TextView mUser;
         public final TextView mTime;
         public Story mStory;
+        private OnStoryClickListener mListener;
 
-        public ViewHolder(@NonNull View view) {
+        public ViewHolder(@NonNull View view, OnStoryClickListener listener) {
             super(view);
+            mListener = listener;
             mView = view;
             mTitle = view.findViewById(R.id.article_title);
             mNumComments = view.findViewById(R.id.article_num_comments);
+            mNumComments.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //String url = mStory.getUrl();
+                    NavController navController = Navigation.findNavController(view);
+                    Bundle args = new Bundle();
+                    args.putParcelable(StoryFragment.ARG_STORY, mStory);
+                    navController.navigate(R.id.action_nav_home_to_nav_story, args);
+                }
+            });
             mUrl = view.findViewById(R.id.article_url);
             mPoints = view.findViewById(R.id.article_points);
             mUser = view.findViewById(R.id.article_user);
@@ -83,12 +116,15 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         }
 
         @Override
-        public void onClick(View view) {
-            //String url = mStory.getUrl();
-            NavController navController = Navigation.findNavController(view);
-            Bundle args = new Bundle();
-            args.putParcelable(StoryFragment.ARG_STORY, mStory);
-            navController.navigate(R.id.action_nav_home_to_nav_item, args);
+        public void onClick(View v) {
+            mListener.onStoryClick(mUrl.getText().toString());
         }
+
+    }
+
+    public interface OnStoryClickListener{
+
+        void onStoryClick(String url);
+
     }
 }
