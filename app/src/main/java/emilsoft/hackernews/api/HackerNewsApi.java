@@ -10,6 +10,7 @@ import io.reactivex.Observable;
 public interface HackerNewsApi {
 
     public static final String BASE_URL = "https://hacker-news.firebaseio.com/v0/";
+    public static final String HACKER_NEWS_BASE_URL = "https://news.ycombinator.com/item?id=";
 
     @GET("topstories.json")
     Observable<List<Long>> getTopStories();

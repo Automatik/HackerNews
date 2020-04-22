@@ -1,17 +1,25 @@
 package emilsoft.hackernews.fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+
+import java.lang.ref.WeakReference;
 
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.api.Story;
@@ -61,5 +69,29 @@ public class WebFragment extends Fragment {
         }
         if(mUrl != null)
             mWebView.loadUrl(mUrl);
+        mWebView.setWebViewClient(new WebViewClient(new WeakReference<Activity>(getActivity()), mUrl));
+    }
+
+    private static class WebViewClient extends android.webkit.WebViewClient {
+
+        private String url;
+        private WeakReference<Activity> activity;
+
+        public WebViewClient(WeakReference<Activity> activity, String url) {
+            this.url = url;
+            this.activity = activity;
+        }
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            Uri uri = Uri.parse(url);
+            CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
+            //Set desired colors
+            intentBuilder.setToolbarColor(ContextCompat.getColor(activity.get(), R.color.colorPrimary));
+            intentBuilder.setSecondaryToolbarColor(ContextCompat.getColor(activity.get(), R.color.colorPrimaryDark));
+            CustomTabsIntent customTabsIntent = intentBuilder.build();
+            customTabsIntent.launchUrl(activity.get(), uri);
+            return true; //handle url myself
+        }
     }
 }

@@ -1,5 +1,6 @@
 package emilsoft.hackernews.fragment;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +12,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -18,6 +21,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.adapter.FragmentAdapter;
+import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Story;
 
 import static emilsoft.hackernews.MainActivity.TAG;
@@ -59,8 +63,8 @@ public class ItemFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.fragment_item_menu_hackernews_link:
-            case R.id.fragment_item_menu_article_link:
+            case R.id.fragment_item_menu_hackernews_link: openWebUrl(HackerNewsApi.HACKER_NEWS_BASE_URL+story.getId()); return true;
+            case R.id.fragment_item_menu_article_link: openWebUrl(story.getUrl()); return true;
             case R.id.fragment_item_menu_share: return true;
             default: return super.onOptionsItemSelected(item);
         }
@@ -73,6 +77,18 @@ public class ItemFragment extends Fragment {
         Fragment storyFragment = adapter.createFragment(1);
         //storyFragment.setArguments(args);
         viewPager.setAdapter(adapter);
+    }
+
+    private void openWebUrl(String url) {
+        if(getActivity() == null)
+            return;
+        Uri uri = Uri.parse(url);
+        CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
+        //Set desired colors
+        intentBuilder.setToolbarColor(ContextCompat.getColor(getActivity(), R.color.colorPrimary));
+        intentBuilder.setSecondaryToolbarColor(ContextCompat.getColor(getActivity(), R.color.colorPrimaryDark));
+        CustomTabsIntent customTabsIntent = intentBuilder.build();
+        customTabsIntent.launchUrl(getActivity(), uri);
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
