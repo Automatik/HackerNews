@@ -1,6 +1,7 @@
 package emilsoft.hackernews.adapter;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -9,10 +10,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.browser.customtabs.CustomTabsIntent;
-import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,6 +24,7 @@ import java.util.List;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.fragment.StoryFragment;
 
 import static emilsoft.hackernews.MainActivity.TAG;
@@ -75,8 +76,14 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
     private OnStoryClickListener onStoryClickListener = new OnStoryClickListener() {
         @Override
         public void onStoryClick(String url) {
-            WeakReference<Activity> ref = new WeakReference<>((Activity) context);
-            Utils.openWebUrl(ref, url);
+            try {
+                WeakReference<Context> ref = new WeakReference<>(context);
+//                Utils.openWebUrl(ref, url);
+
+                CustomTabActivityHelper.openWebUrl(ref, url);
+            } catch (ActivityNotFoundException ex) {
+                Toast.makeText(context, "No Browser found to open link", Toast.LENGTH_SHORT).show();
+            }
         }
     };
 
