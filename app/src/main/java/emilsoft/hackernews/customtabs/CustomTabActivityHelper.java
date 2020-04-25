@@ -3,26 +3,19 @@ package emilsoft.hackernews.customtabs;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
+
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.VectorDrawable;
+
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.browser.customtabs.CustomTabsClient;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.browser.customtabs.CustomTabsServiceConnection;
 import androidx.browser.customtabs.CustomTabsSession;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.drawable.DrawableCompat;
 
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
@@ -56,7 +49,10 @@ public class CustomTabActivityHelper implements ServiceConnectionCallback {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
             activity.startActivity(browserIntent);
         } else {
-            customTabsIntent.intent.setPackage(packageName);
+
+            // This set to only use chrome
+//            customTabsIntent.intent.setPackage(packageName);
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
                 // Add your app as the referrer
                 //It's usually very important for websites to track where their traffic is coming from.
