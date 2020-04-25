@@ -90,8 +90,15 @@ public class HomeFragment extends Fragment {
                 //The RecyclerView is not currently scrolling.
                 //TODO Add an if condition for checking if the first load has finished
                 int startIndex = homeViewModel.lastItemLoadedIndex + 1;
-                for(int i = startIndex; i < startIndex + NUM_LOAD_ITEMS; i++)
+                int i = startIndex;
+
+                //First condition to check if the user finished to load the 500 top stories ids
+                while(i < homeViewModel.topStoriesIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
                     observeStory(homeViewModel.topStoriesIds.get(i));
+                    i++;
+                }
+//                for(int i = startIndex; i < startIndex + NUM_LOAD_ITEMS; i++)
+//                    observeStory(homeViewModel.topStoriesIds.get(i));
                 homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
             }
         }
