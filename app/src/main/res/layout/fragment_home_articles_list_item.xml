@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_marginStart="@dimen/list_item_horizontal_margin"
     android:layout_marginTop="@dimen/list_item_vertical_margin"
     android:layout_marginEnd="@dimen/list_item_horizontal_margin"
@@ -17,7 +18,8 @@
         android:textAlignment="textStart"
         app:layout_constraintEnd_toStartOf="@id/guideline_right"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Show HN: This is the title with two lines of text"/>
 
     <TextView
         android:id="@+id/article_num_comments"
@@ -27,7 +29,8 @@
         android:textSize="@dimen/list_item_article_num_comments_text_size"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/guideline_right"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="125 C"/>
 
     <TextView
         android:id="@+id/article_url"
@@ -39,7 +42,8 @@
         android:maxLines="1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/article_title"
-        app:layout_constraintEnd_toStartOf="@id/guideline_right" />
+        app:layout_constraintEnd_toStartOf="@id/guideline_right"
+        tools:text="http://www.google.com"/>
 
     <TextView
         android:id="@+id/article_points"
@@ -49,7 +53,8 @@
         android:textSize="@dimen/list_item_article_num_comments_text_size"
         app:layout_constraintTop_toBottomOf="@id/article_num_comments"
         app:layout_constraintStart_toEndOf="@id/guideline_right"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="120 p"/>
 
     <TextView
         android:id="@+id/article_user"
@@ -59,7 +64,8 @@
         android:textSize="@dimen/list_item_article_url_text_size"
         app:layout_constraintTop_toBottomOf="@id/article_url"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/guideline_right" />
+        app:layout_constraintEnd_toStartOf="@id/guideline_right"
+        tools:text="username"/>
 
     <TextView
         android:id="@+id/article_time"
@@ -69,7 +75,8 @@
         android:textAlignment="textEnd"
         app:layout_constraintTop_toBottomOf="@id/article_points"
         app:layout_constraintStart_toEndOf="@id/guideline_right"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="1 d"/>
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_right"

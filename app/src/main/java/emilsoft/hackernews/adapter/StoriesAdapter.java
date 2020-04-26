@@ -21,6 +21,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Story;
@@ -54,7 +55,12 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         holder.mStory = stories.get(position);
         holder.mTitle.setText(holder.mStory.getTitle());
         holder.mNumComments.setText(holder.mStory.getDescendants() + " C");
-        holder.mUrl.setText(holder.mStory.getUrl());
+        // Fix for stories that don't have url like AskHN
+        if(holder.mStory.getUrl() == null)
+            //Url would be news.ycombinator.com
+            holder.mUrl.setVisibility(View.GONE); //Handle on Click
+        else
+            holder.mUrl.setText(holder.mStory.getUrl());
         holder.mPoints.setText(holder.mStory.getScore() + " p");
         holder.mUser.setText(holder.mStory.getUser());
         holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mStory.getTime()));
@@ -124,6 +130,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
         @Override
         public void onClick(View v) {
+            //TODO Handle to click in case of not a story with url
             mListener.onStoryClick(mUrl.getText().toString());
         }
 
