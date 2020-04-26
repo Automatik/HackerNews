@@ -1,6 +1,7 @@
 package emilsoft.hackernews.customtabs;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
@@ -65,21 +66,37 @@ public class CustomTabActivityHelper implements ServiceConnectionCallback {
     }
 
     public static void openWebUrl(WeakReference<Context> context, String url) {
+        openWebUrl(context, url, null);
+    }
+
+    public static void openWebUrl(WeakReference<Context> context, String articleUrl, String hackerNewsUrl) {
         Context ctx = context.get();
-        if(ctx == null)
-            return;
-        Uri uri = Uri.parse(url);
+        if(ctx == null || articleUrl == null) return;
+
+        Uri uri = Uri.parse(articleUrl);
         CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
         //Set desired colors
         intentBuilder.setToolbarColor(ContextCompat.getColor(ctx, R.color.colorPrimary));
         intentBuilder.setSecondaryToolbarColor(ContextCompat.getColor(ctx, R.color.colorPrimaryDark));
 
-        //Set custom back button
+        // Set custom back button
         // Can't use bitmapfactory with vector drawable
 //        intentBuilder.setCloseButtonIcon(BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_arrow_back_black_24dp));
         Bitmap icon = Utils.getBitmapFromVectorDrawable(ctx, R.drawable.ic_arrow_back_black_24dp);
         if (icon != null)
             intentBuilder.setCloseButtonIcon(icon);
+
+        if (hackerNewsUrl != null) {
+            // Open new Chrome Tab (not Custom)
+            Uri hackerNewsUri = Uri.parse(hackerNewsUrl);
+            Intent hackerNewsIntent = new Intent(Intent.ACTION_VIEW, hackerNewsUri);
+            PendingIntent hackerNewsPendingIntent = PendingIntent.getActivity(ctx,
+                    0,
+                    hackerNewsIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+            intentBuilder.addMenuItem("HackerNews Link", hackerNewsPendingIntent);
+        }
 
         CustomTabsIntent customTabsIntent = intentBuilder.build();
 //        customTabsIntent.launchUrl(ctx, uri);

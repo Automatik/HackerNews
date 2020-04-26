@@ -24,6 +24,7 @@ import java.util.List;
 import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
+import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.fragment.StoryFragment;
@@ -81,12 +82,12 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
     private OnStoryClickListener onStoryClickListener = new OnStoryClickListener() {
         @Override
-        public void onStoryClick(String url) {
+        public void onStoryClick(String url, long storyId) {
             try {
                 WeakReference<Context> ref = new WeakReference<>(context);
 //                Utils.openWebUrl(ref, url);
-
-                CustomTabActivityHelper.openWebUrl(ref, url);
+                String hackerNewsUrl = HackerNewsApi.HACKER_NEWS_BASE_URL + storyId;
+                CustomTabActivityHelper.openWebUrl(ref, url, hackerNewsUrl);
             } catch (ActivityNotFoundException ex) {
                 Toast.makeText(context, "No Browser found to open link", Toast.LENGTH_SHORT).show();
             }
@@ -131,14 +132,14 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         @Override
         public void onClick(View v) {
             //TODO Handle to click in case of not a story with url
-            mListener.onStoryClick(mUrl.getText().toString());
+            mListener.onStoryClick(mUrl.getText().toString(), mStory.getId());
         }
 
     }
 
     public interface OnStoryClickListener{
 
-        void onStoryClick(String url);
+        void onStoryClick(String url, long storyId);
 
     }
 }
