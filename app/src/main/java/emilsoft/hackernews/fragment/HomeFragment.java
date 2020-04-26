@@ -15,7 +15,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.adapter.StoriesAdapter;
+import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.viewmodel.HomeViewModel;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.api.Story;
@@ -93,13 +95,14 @@ public class HomeFragment extends Fragment {
                 int i = startIndex;
 
                 //First condition to check if the user finished to load the 500 top stories ids
-                while(i < homeViewModel.topStoriesIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
+                while (i < homeViewModel.topStoriesIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
                     observeStory(homeViewModel.topStoriesIds.get(i));
                     i++;
                 }
-//                for(int i = startIndex; i < startIndex + NUM_LOAD_ITEMS; i++)
-//                    observeStory(homeViewModel.topStoriesIds.get(i));
-                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
+
+//                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
+                homeViewModel.lastItemLoadedIndex += i - startIndex;
+
             }
         }
 
