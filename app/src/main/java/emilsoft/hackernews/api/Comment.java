@@ -27,6 +27,7 @@ public class Comment extends Item {
     }
 
     public Comment(Parcel in) {
+        super(in);
         this.kids = new long[in.readInt()];
         in.readLongArray(kids);
         this.parent = in.readLong();

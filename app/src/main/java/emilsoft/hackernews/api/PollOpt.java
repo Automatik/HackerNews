@@ -21,6 +21,7 @@ public class PollOpt extends Item {
     PollOpt(){}
 
     public PollOpt(Parcel in) {
+        super(in);
         this.score = in.readInt();
         this.text = in.readString();
         this.poll = in.readLong();

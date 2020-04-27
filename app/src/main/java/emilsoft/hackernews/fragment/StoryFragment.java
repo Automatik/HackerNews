@@ -23,6 +23,7 @@ import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.databinding.FragmentStoryBinding;
 import emilsoft.hackernews.viewmodel.StoryViewModel;
 import retrofit2.Call;
 
@@ -104,14 +105,14 @@ public class StoryFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_story, container, false);
-        recyclerView = view.findViewById(R.id.comments_list);
-        titleText = view.findViewById(R.id.story_article_title);
-        urlText = view.findViewById(R.id.story_article_url);
-        userText = view.findViewById(R.id.story_article_user);
-        timeText = view.findViewById(R.id.story_article_time);
-        pointsText = view.findViewById(R.id.story_article_points);
-        numCommentsText = view.findViewById(R.id.story_article_num_comments);
+        FragmentStoryBinding binding = FragmentStoryBinding.inflate(inflater, container, false);
+        recyclerView = binding.commentsList;
+        titleText = binding.storyArticleTitle;
+        urlText = binding.storyArticleUrl;
+        userText = binding.storyArticleUser;
+        timeText = binding.storyArticleTime;
+        pointsText = binding.storyArticlePoints;
+        numCommentsText = binding.storyArticleNumComments;
 
         titleText.setText(mTitle);
         urlText.setText(mUrl);
@@ -119,7 +120,7 @@ public class StoryFragment extends Fragment {
         pointsText.setText(String.valueOf(mPoints));
         timeText.setText(Utils.getAbbreviatedTimeSpan(mTime));
         numCommentsText.setText(String.valueOf(mNumComments));
-        return view;
+        return binding.getRoot();
     }
 
     @Override

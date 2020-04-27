@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,9 +28,8 @@ import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
+import emilsoft.hackernews.databinding.FragmentHomeArticlesListItemBinding;
 import emilsoft.hackernews.fragment.StoryFragment;
-
-import static emilsoft.hackernews.MainActivity.TAG;
 
 public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHolder> {
 
@@ -46,9 +46,10 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_home_articles_list_item, parent, false);
-        return new ViewHolder(view, onStoryClickListener);
+        return new ViewHolder(
+                FragmentHomeArticlesListItemBinding.inflate(
+                    LayoutInflater.from(parent.getContext()), parent, false),
+                onStoryClickListener);
     }
 
     @Override
@@ -98,7 +99,8 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public final View mView;
+        public final FragmentHomeArticlesListItemBinding mBinding;
+        public final ConstraintLayout mCommentsLayout;
         public final TextView mTitle;
         public final TextView mNumComments;
         public final TextView mUrl;
@@ -108,13 +110,14 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         public Story mStory;
         private OnStoryClickListener mListener;
 
-        public ViewHolder(@NonNull View view, OnStoryClickListener listener) {
-            super(view);
+        public ViewHolder(@NonNull FragmentHomeArticlesListItemBinding binding, OnStoryClickListener listener) {
+            super(binding.getRoot());
             mListener = listener;
-            mView = view;
-            mTitle = view.findViewById(R.id.article_title);
-            mNumComments = view.findViewById(R.id.article_num_comments);
-            mNumComments.setOnClickListener(new View.OnClickListener() {
+            mBinding = binding;
+            mCommentsLayout = binding.articleCommentsLayout;
+            mTitle = binding.articleTitle;
+            mNumComments = binding.articleNumComments;
+            mCommentsLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     //String url = mStory.getUrl();
@@ -124,11 +127,11 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
                     navController.navigate(R.id.action_nav_home_to_nav_story, args);
                 }
             });
-            mUrl = view.findViewById(R.id.article_url);
-            mPoints = view.findViewById(R.id.article_points);
-            mUser = view.findViewById(R.id.article_user);
-            mTime = view.findViewById(R.id.article_time);
-            mView.setOnClickListener(this);
+            mUrl = binding.articleUrl;
+            mPoints = binding.articlePoints;
+            mUser = binding.articleUser;
+            mTime = binding.articleTime;
+            mBinding.getRoot().setOnClickListener(this);
         }
 
         @Override
@@ -139,7 +142,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
     }
 
-    public interface OnStoryClickListener{
+    private interface OnStoryClickListener{
 
         void onStoryClick(String url, long storyId);
 

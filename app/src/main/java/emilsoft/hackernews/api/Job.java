@@ -21,6 +21,7 @@ public class Job extends Item {
     Job(){}
 
     public Job(Parcel in) {
+        super(in);
         this.score = in.readInt();
         this.text = in.readString();
         this.title = in.readString();

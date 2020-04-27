@@ -21,6 +21,7 @@ public class Poll extends Item {
     Poll(){}
 
     public Poll(Parcel in) {
+        super(in);
         this.descendants = in.readInt();
         this.kids = new long[in.readInt()];
         in.readLongArray(kids);

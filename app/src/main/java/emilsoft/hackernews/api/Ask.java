@@ -21,6 +21,7 @@ public class Ask extends Item {
     Ask(){}
 
     public Ask(Parcel in) {
+        super(in);
         this.descendants = in.readInt();
         this.kids = new long[in.readInt()];
         in.readLongArray(kids);

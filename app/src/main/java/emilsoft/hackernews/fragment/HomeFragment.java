@@ -18,6 +18,7 @@ import java.util.List;
 import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.adapter.StoriesAdapter;
 import emilsoft.hackernews.api.HackerNewsApi;
+import emilsoft.hackernews.databinding.FragmentHomeBinding;
 import emilsoft.hackernews.viewmodel.HomeViewModel;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.api.Story;
@@ -35,8 +36,8 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
-        recyclerView = view.findViewById(R.id.articles_list);
+        FragmentHomeBinding binding = FragmentHomeBinding.inflate(inflater, container, false);
+        recyclerView = binding.articlesList;
         recyclerView.addOnScrollListener(onScrollListener);
         //final TextView textView = root.findViewById(R.id.text_home);
 //        homeViewModel.getText().observe(this, new Observer<String>() {
@@ -45,7 +46,7 @@ public class HomeFragment extends Fragment {
 //                textView.setText(s);
 //            }
 //        });
-        return view;
+        return binding.getRoot();
     }
 
     @Override

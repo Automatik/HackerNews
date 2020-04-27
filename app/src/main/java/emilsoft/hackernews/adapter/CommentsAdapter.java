@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -15,9 +16,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Comment;
+import emilsoft.hackernews.databinding.CommentsListItemBinding;
 
 import static emilsoft.hackernews.MainActivity.TAG;
 
@@ -35,9 +38,10 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.comments_list_item, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(CommentsListItemBinding.inflate(
+                LayoutInflater.from(parent.getContext()),
+                parent, false)
+        );
     }
 
     @Override
@@ -53,9 +57,9 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         } else
             holder.mLevel.setVisibility(View.GONE);
         final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
-                holder.mView.getLayoutParams();
+                holder.mBinding.getRoot().getLayoutParams();
         params.leftMargin = holder.mComment.getLevel() * levelStartMargin;
-        holder.mView.setLayoutParams(params);
+        holder.mBinding.getRoot().setLayoutParams(params);
     }
 
     @Override
@@ -84,9 +88,9 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         return (colorCodes != null) ? colorCodes[level % colorCodes.length] : 0;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder{
 
-        public final View mView;
+        public final CommentsListItemBinding mBinding;
         public final TextView mTime;
         public final TextView mUser;
         public final TextView mText;
@@ -94,15 +98,14 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         public Comment mComment;
 
 
-        public ViewHolder(@NonNull View view) {
-            super(view);
-            mView = view;
-            mLevel = view.findViewById(R.id.comment_level);
-            mTime = view.findViewById(R.id.comment_time);
-            mUser = view.findViewById(R.id.comment_user);
-            mText = view.findViewById(R.id.comment_text);
+        public ViewHolder(@NonNull CommentsListItemBinding binding) {
+            super(binding.getRoot());
+            mBinding = binding;
+            mLevel = binding.commentLevel;
+            mTime = binding.commentTime;
+            mUser = binding.commentUser;
+            mText = binding.commentText;
         }
-
     }
 
 }
