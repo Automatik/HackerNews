@@ -2,6 +2,8 @@ package emilsoft.hackernews.adapter;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import emilsoft.hackernews.BuildConfig;
 import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
@@ -29,6 +32,8 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
     private LinkedList<Comment> commentsList;
     private int[] colorCodes;
     private int levelStartMargin;
+    private Context context;
+
 
     public CommentsAdapter(LinkedList<Comment> commentsList) {
         this.commentsList = commentsList;
@@ -48,8 +53,39 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.mComment = commentsList.get(position);
         holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mComment.getTime()));
-        holder.mUser.setText(holder.mComment.getUser());
-        holder.mText.setText(Utils.fromHtml(holder.mComment.getText()));
+
+        if (holder.mComment.isDeleted()) {
+            // setup STRIKE_THRU_TEXT_FLAG flag if current flags not contains it
+            holder.mTime.setPaintFlags(holder.mTime.getPaintFlags() ^ Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.mText.setText("");
+            holder.mUser.setText("");
+        }
+        else {
+            // Remove strike through if set
+            if((holder.mTime.getPaintFlags() & Paint.STRIKE_THRU_TEXT_FLAG) == Paint.STRIKE_THRU_TEXT_FLAG)
+                holder.mTime.setPaintFlags(holder.mTime.getPaintFlags() ^ Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.mUser.setText(holder.mComment.getUser());
+            holder.mText.setText(Utils.fromHtml(holder.mComment.getText()));
+        }
+        if (holder.mComment.isDead()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                holder.mUser.setTextAppearance(R.style.TextAppearance_AppCompat_Small_Disable);
+                holder.mText.setTextAppearance(R.style.TextAppearance_AppCompat_Body1_Disable);
+            } else {
+                holder.mUser.setTextAppearance(context, R.style.TextAppearance_AppCompat_Small_Disable);
+                holder.mText.setTextAppearance(context, R.style.TextAppearance_AppCompat_Body1_Disable);
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                holder.mUser.setTextAppearance(R.style.TextAppearance_AppCompat_Small);
+                holder.mText.setTextAppearance(R.style.TextAppearance_AppCompat_Body1);
+            } else {
+                holder.mUser.setTextAppearance(context, R.style.TextAppearance_AppCompat_Small);
+                holder.mText.setTextAppearance(context, R.style.TextAppearance_AppCompat_Body1);
+            }
+        }
+
+
         int color = getCommentColor(holder.mComment.getLevel() - 1);
         if(color != 0) {
             holder.mLevel.setVisibility(View.VISIBLE);
@@ -72,7 +108,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
-        Context context = recyclerView.getContext();
+        context = recyclerView.getContext();
         colorCodes = context.getResources().getIntArray(R.array.color_codes);
         levelStartMargin = (int) (context.getResources().getDimension(R.dimen.comment_level_start_left_margin)
                 / context.getResources().getDisplayMetrics().density);

@@ -137,7 +137,6 @@ public class StoryFragment extends Fragment {
             @Override
             public void onChanged(Comment comment) {
                 int pos = storyViewModel.commentsList.size();
-                //Log.v(TAG, "Comments: "+(pos+1));
                 long idParent = comment.getParent();
                 if(idParent == mStoryId) {
                     comment.setLevel(1);

@@ -22,4 +22,12 @@
         <item name="cardUseCompatPadding">true</item>
     </style>
 
+    <style name="TextAppearance.AppCompat.Body1.Disable" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">@color/textDisabled</item> <!-- body1 is #000000 -->
+    </style>
+
+    <style name="TextAppearance.AppCompat.Small.Disable" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/textDisabled</item>
+    </style>
+
 </resources>
