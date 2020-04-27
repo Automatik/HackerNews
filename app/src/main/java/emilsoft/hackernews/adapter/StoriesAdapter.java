@@ -66,7 +66,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             holder.mUrl.setText(holder.mStory.getUrl());
         holder.mPoints.setText(Integer.toString(holder.mStory.getScore()));
         holder.mUser.setText(holder.mStory.getUser());
-//        holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mStory.getTime()));
+        holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mStory.getTime()));
     }
 
     @Override
@@ -104,7 +104,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         public final TextView mUrl;
         public final TextView mPoints;
         public final TextView mUser;
-//        public final TextView mTime;
+        public final TextView mTime;
         public Story mStory;
         private OnStoryClickListener mListener;
 
@@ -127,7 +127,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             mUrl = view.findViewById(R.id.article_url);
             mPoints = view.findViewById(R.id.article_points);
             mUser = view.findViewById(R.id.article_user);
-//            mTime = view.findViewById(R.id.article_time);
+            mTime = view.findViewById(R.id.article_time);
             mView.setOnClickListener(this);
         }
 
