@@ -36,7 +36,9 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
 
 
     public CommentsAdapter(LinkedList<Comment> commentsList) {
-        this.commentsList = commentsList;
+        if (commentsList == null)
+            this.commentsList = new LinkedList<>();
+        else this.commentsList = commentsList;
     }
 
 

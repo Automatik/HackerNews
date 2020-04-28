@@ -51,8 +51,6 @@ public class StoryFragment extends Fragment {
 
     private StoryViewModel storyViewModel;
 
-    //TODO Quando cambio orientamento dello schermo si creano copie dei commenti
-
     public static StoryFragment newInstance(Story story) {
 
         Bundle args = new Bundle();
@@ -62,7 +60,6 @@ public class StoryFragment extends Fragment {
         return fragment;
     }
 
-    @SuppressLint("UseSparseArrays")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,8 +86,9 @@ public class StoryFragment extends Fragment {
                 return;
             }
 
-            for(long idComment : mComments)
+            for(long idComment : mComments) {
                 observeComment(idComment);
+            }
 
         } else {
             mUrl = "www.example.com";
@@ -136,22 +134,25 @@ public class StoryFragment extends Fragment {
         storyViewModel.getComment(id).observe(this, new Observer<Comment>() {
             @Override
             public void onChanged(Comment comment) {
-                int pos = storyViewModel.commentsList.size();
-                long idParent = comment.getParent();
-                if(idParent == mStoryId) {
-                    comment.setLevel(1);
-                    storyViewModel.commentsList.add(comment);
-                    if(adapter != null)
-                        adapter.notifyItemInserted(pos);
-                } else {
-                    Comment parent = new Comment(idParent);
-                    int index = storyViewModel.commentsList.indexOf(parent);
-                    parent = storyViewModel.commentsList.get(index);
-                    comment.setLevel(parent.getLevel() + 1);
-                    index += 1; //+1 after the parent
-                    storyViewModel.commentsList.add(index, comment);
-                    if(adapter != null)
-                        adapter.notifyItemInserted(index);
+                // Avoid inserting duplicates
+                if(!storyViewModel.commentsList.contains(comment)) {
+                    int pos = storyViewModel.commentsList.size();
+                    long idParent = comment.getParent();
+                    if (idParent == mStoryId) {
+                        comment.setLevel(1);
+                        storyViewModel.commentsList.add(comment);
+                        if (adapter != null)
+                            adapter.notifyItemInserted(pos);
+                    } else {
+                        Comment parent = new Comment(idParent);
+                        int index = storyViewModel.commentsList.indexOf(parent);
+                        parent = storyViewModel.commentsList.get(index);
+                        comment.setLevel(parent.getLevel() + 1);
+                        index += 1; //+1 after the parent
+                        storyViewModel.commentsList.add(index, comment);
+                        if (adapter != null)
+                            adapter.notifyItemInserted(index);
+                    }
                 }
                 long[] kids = comment.getKids();
                 if(kids != null)
