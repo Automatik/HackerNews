@@ -76,10 +76,12 @@ public class HomeFragment extends Fragment {
         homeViewModel.getStory(id).observe(this, new Observer<Story>() {
             @Override
             public void onChanged(Story story) {
-                int pos = homeViewModel.topStories.size();
-                homeViewModel.topStories.add(story);
-                if(adapter != null)
-                    adapter.notifyItemInserted(pos);
+                if(!homeViewModel.topStories.contains(story)) {
+                    int pos = homeViewModel.topStories.size();
+                    homeViewModel.topStories.add(story);
+                    if (adapter != null)
+                        adapter.notifyItemInserted(pos);
+                }
             }
         });
     }
