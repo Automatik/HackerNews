@@ -19,6 +19,7 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,8 +64,11 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             //Url would be news.ycombinator.com
 //            holder.mUrl.setVisibility(View.GONE);
             holder.mUrl.setText("news.ycombinator.com");
-        else
-            holder.mUrl.setText(holder.mStory.getUrl());
+        else {
+
+            Uri uri = Uri.parse(holder.mStory.getUrl());
+            holder.mUrl.setText(uri.getHost());
+        }
         holder.mPoints.setText(Integer.toString(holder.mStory.getScore()));
         holder.mUser.setText(holder.mStory.getUser());
         holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mStory.getTime()));

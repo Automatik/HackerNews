@@ -1,6 +1,7 @@
 package emilsoft.hackernews.fragment;
 
 import android.annotation.SuppressLint;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -94,7 +95,8 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         numCommentsText = binding.storyArticleNumComments;
 
         titleText.setText(storyViewModel.mTitle);
-        urlText.setText(storyViewModel.mUrl);
+        Uri uri = Uri.parse(storyViewModel.mUrl);
+        urlText.setText(uri.getHost());
         userText.setText(storyViewModel.mUser);
         pointsText.setText(String.valueOf(storyViewModel.mPoints));
         timeText.setText(Utils.getAbbreviatedTimeSpan(storyViewModel.mTime));
