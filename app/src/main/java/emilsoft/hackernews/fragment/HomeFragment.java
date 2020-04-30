@@ -37,8 +37,6 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     private StoriesAdapter adapter;
     private HomeViewModel homeViewModel;
 
-    private long lastIdsRefreshTime = 0L;
-
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
@@ -86,11 +84,10 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 //The RecyclerView is not currently scrolling.
                 int startIndex = homeViewModel.lastItemLoadedIndex + 1;
                 int i = startIndex;
-                long refreshTime = System.currentTimeMillis();
 
                 //First condition to check if the user finished to load the 500 top stories ids
                 while (i < homeViewModel.topStoriesIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
-                    observeStory(homeViewModel.topStoriesIds.get(i), refreshTime);
+                    observeStory(homeViewModel.topStoriesIds.get(i));
                     i++;
                 }
 //                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
@@ -108,56 +105,44 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
     @Override
     public void onRefresh() {
+        refreshArticles();
+    }
+
+    private void refreshArticles() {
         long currentTime = System.currentTimeMillis();
-        if(currentTime - lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
-            lastIdsRefreshTime = currentTime;
-            refreshArticles();
+        if(currentTime - homeViewModel.lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
+            homeViewModel.lastIdsRefreshTime = currentTime;
+            homeViewModel.getTopStoriesIds().observe(this, new Observer<List<Long>>() {
+                @Override
+                public void onChanged(List<Long> ids) {
+                    homeViewModel.topStoriesIds.clear();
+                    int size = homeViewModel.topStories.size();
+                    homeViewModel.topStories.clear();
+                    if (adapter != null)
+                        adapter.notifyItemRangeRemoved(0, size);
+                    homeViewModel.topStoriesIds.addAll(ids);
+                    homeViewModel.lastItemLoadedIndex = 0;
+                    for (int i = 0; i < NUM_LOAD_ITEMS; i++) {
+                        observeStory(ids.get(i));
+                    }
+                    homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+            });
         } else {
             swipeRefreshLayout.setRefreshing(false);
         }
     }
 
-    private void refreshArticles() {
-        homeViewModel.getTopStoriesIds().observe(this, new Observer<List<Long>>() {
-            @Override
-            public void onChanged(List<Long> ids) {
-                homeViewModel.topStoriesIds.clear();
-                int size = homeViewModel.topStories.size();
-                homeViewModel.topStories.clear();
-                if(adapter != null)
-                    adapter.notifyItemRangeRemoved(0, size);
-                homeViewModel.topStoriesIds.addAll(ids);
-                homeViewModel.lastItemLoadedIndex = 0;
-                long refreshTime = System.currentTimeMillis();
-                for(int i = 0; i < NUM_LOAD_ITEMS; i++) {
-                    observeStory(ids.get(i), refreshTime);
-                }
-                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
-                swipeRefreshLayout.setRefreshing(false);
-            }
-        });
-    }
-
-    private void observeStory(final long id, final long refreshTime) {
+    private void observeStory(long id) {
         homeViewModel.getStory(id).observe(this, new Observer<Story>() {
             @Override
             public void onChanged(Story story) {
                 if(!homeViewModel.topStories.contains(story)) {
-                    homeViewModel.lastModified.put(id, refreshTime);
                     int pos = homeViewModel.topStories.size();
                     homeViewModel.topStories.add(story);
                     if (adapter != null)
                         adapter.notifyItemInserted(pos);
-                    return;
-                }
-                Long lastModified = homeViewModel.lastModified.get(id);
-                if(lastModified == null) return;
-                if(lastModified <= refreshTime) {
-                    homeViewModel.lastModified.put(id, refreshTime);
-                    int pos = homeViewModel.topStories.indexOf(story);
-                    homeViewModel.topStories.set(pos, story);
-                    if(adapter != null)
-                        adapter.notifyItemChanged(pos);
                 }
             }
         });

@@ -16,6 +16,7 @@ public class StoryViewModel extends ViewModel {
 
     public LinkedList<Comment> commentsList;
     private HackerNewsRepository repository;
+    public long lastCommentsRefreshTime = 0L;
 
     public String mUrl, mUser, mTitle;
     public int mPoints, mNumComments;

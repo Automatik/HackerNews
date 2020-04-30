@@ -43,8 +43,6 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     private StoryViewModel storyViewModel;
 
-    private long lastCommentsRefreshTime = 0L;
-
     public static StoryFragment newInstance(Story story) {
 
         Bundle args = new Bundle();
@@ -133,24 +131,27 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     @Override
     public void onRefresh() {
-        long currentTime = System.currentTimeMillis();
-        if(currentTime - lastCommentsRefreshTime > Utils.CACHE_EXPIRATION) {
-            lastCommentsRefreshTime = currentTime;
-            observeStory();
-        } else {
-            swipeRefreshLayout.setRefreshing(false);
-        }
-
+        observeStory();
     }
 
     private void observeStory() {
-        storyViewModel.getStory().observe(this, new Observer<Story>() {
-            @Override
-            public void onChanged(Story story) {
-                storyViewModel.mStory = story;
-                startObservingComments(story);
-            }
-        });
+        long currentTime = System.currentTimeMillis();
+        if(currentTime - storyViewModel.lastCommentsRefreshTime > Utils.CACHE_EXPIRATION) {
+            storyViewModel.lastCommentsRefreshTime = currentTime;
+            storyViewModel.getStory().observe(this, new Observer<Story>() {
+                @Override
+                public void onChanged(Story story) {
+                    storyViewModel.mStory = story;
+                    int size = storyViewModel.commentsList.size();
+                    storyViewModel.commentsList.clear();
+                    if (adapter != null)
+                        adapter.notifyItemRangeRemoved(0, size);
+                    startObservingComments(story);
+                }
+            });
+        } else {
+            swipeRefreshLayout.setRefreshing(false);
+        }
     }
 
     private void startObservingComments(Story story) {

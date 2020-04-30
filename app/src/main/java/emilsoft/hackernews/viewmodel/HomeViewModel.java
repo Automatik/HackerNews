@@ -20,15 +20,14 @@ public class HomeViewModel extends ViewModel {
 
     public List<Long> topStoriesIds;
     public List<Story> topStories;
-    public HashMap<Long, Long> lastModified;
     private HackerNewsRepository repository;
     public int lastItemLoadedIndex;
+    public long lastIdsRefreshTime = 0L;
 
     public HomeViewModel() {
         repository = HackerNewsRepository.getInstance();
         topStoriesIds = new ArrayList<>();
         topStories = new ArrayList<>();
-        lastModified = new HashMap<>();
     }
 
     public LiveData<List<Long>> getTopStoriesIds() {
