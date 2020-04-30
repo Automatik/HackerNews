@@ -20,6 +20,8 @@ import static emilsoft.hackernews.MainActivity.TAG;
 
 public class Utils {
 
+    public static final long CACHE_EXPIRATION = 1000 * 60 * 5; // 5 minutes
+
     private static final String ABBR_YEAR = "y";
     private static final String ABBR_WEEK = "w";
     private static final String ABBR_DAY = "d";

@@ -63,9 +63,9 @@ public class ItemFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.fragment_item_menu_hackernews_link: openWebUrl(HackerNewsApi.HACKER_NEWS_BASE_URL+story.getId()); return true;
-            case R.id.fragment_item_menu_article_link: openWebUrl(story.getUrl()); return true;
-            case R.id.fragment_item_menu_share: return true;
+            case R.id.action_item_menu_hackernews_link: openWebUrl(HackerNewsApi.HACKER_NEWS_BASE_URL+story.getId()); return true;
+            case R.id.action_item_menu_article_link: openWebUrl(story.getUrl()); return true;
+            case R.id.action_item_menu_share: return true;
             default: return super.onOptionsItemSelected(item);
         }
     }

@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -16,40 +19,31 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.LinkedList;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.Utils;
-import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.databinding.FragmentStoryBinding;
 import emilsoft.hackernews.viewmodel.StoryViewModel;
-import retrofit2.Call;
 
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.api.Comment;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.internal.EverythingIsNonNull;
 
 import static emilsoft.hackernews.MainActivity.TAG;
 
-public class StoryFragment extends Fragment {
+public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
 
     public static final String ARG_STORY = "argument_story";
 
     private TextView titleText, userText, urlText, timeText, pointsText, numCommentsText;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
     private CommentsAdapter adapter;
 
-    private String mUrl, mUser, mTitle;
-    private int mPoints, mNumComments;
-    private long mTime, mStoryId;
-    private long[] mComments;
-    private Story mStory;
-
     private StoryViewModel storyViewModel;
+
+    private long lastCommentsRefreshTime = 0L;
 
     public static StoryFragment newInstance(Story story) {
 
@@ -67,36 +61,22 @@ public class StoryFragment extends Fragment {
 
         Bundle args = getArguments();
         if(args != null) {
-            mStory = args.getParcelable(ARG_STORY);
-            if(mStory == null) {
+            Story mStory = args.getParcelable(ARG_STORY);
+            storyViewModel.mStory = mStory;
+            if(storyViewModel.mStory == null) {
                 Log.v(TAG, "Story is null");
                 return;
             }
-            mStoryId = mStory.getId();
-            mUrl = mStory.getUrl();
-            mTitle = mStory.getTitle();
-            mUser = mStory.getUser();
-            mPoints = mStory.getScore();
-            mNumComments = mStory.getDescendants();
-            mTime = mStory.getTime();
-            mComments = mStory.getKids();
 
-            if(mComments == null) {
-                Log.v(TAG, "Comments are null");
-                return;
-            }
-
-            for(long idComment : mComments) {
-                observeComment(idComment);
-            }
+            startObservingComments(mStory);
 
         } else {
-            mUrl = "www.example.com";
-            mTitle = "Error Retrieving Story";
-            mUser = "";
-            mPoints = 0;
-            mNumComments = 0;
-            mTime = 0;
+            storyViewModel.mUrl = "www.example.com";
+            storyViewModel.mTitle = "Error Retrieving Story";
+            storyViewModel.mUser = "";
+            storyViewModel.mPoints = 0;
+            storyViewModel.mNumComments = 0;
+            storyViewModel.mTime = 0;
         }
     }
 
@@ -104,6 +84,9 @@ public class StoryFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         FragmentStoryBinding binding = FragmentStoryBinding.inflate(inflater, container, false);
+        swipeRefreshLayout = binding.commentsSwipeRefresh;
+        swipeRefreshLayout.setOnRefreshListener(this);
+        swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.redA200);
         recyclerView = binding.commentsList;
         titleText = binding.storyArticleTitle;
         urlText = binding.storyArticleUrl;
@@ -112,12 +95,12 @@ public class StoryFragment extends Fragment {
         pointsText = binding.storyArticlePoints;
         numCommentsText = binding.storyArticleNumComments;
 
-        titleText.setText(mTitle);
-        urlText.setText(mUrl);
-        userText.setText(mUser);
-        pointsText.setText(String.valueOf(mPoints));
-        timeText.setText(Utils.getAbbreviatedTimeSpan(mTime));
-        numCommentsText.setText(String.valueOf(mNumComments));
+        titleText.setText(storyViewModel.mTitle);
+        urlText.setText(storyViewModel.mUrl);
+        userText.setText(storyViewModel.mUser);
+        pointsText.setText(String.valueOf(storyViewModel.mPoints));
+        timeText.setText(Utils.getAbbreviatedTimeSpan(storyViewModel.mTime));
+        numCommentsText.setText(String.valueOf(storyViewModel.mNumComments));
         return binding.getRoot();
     }
 
@@ -130,6 +113,64 @@ public class StoryFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.fragment_item_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_item_menu_refresh:
+                swipeRefreshLayout.setRefreshing(true);
+                observeStory();
+                return true;
+            default: return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    @Override
+    public void onRefresh() {
+        long currentTime = System.currentTimeMillis();
+        if(currentTime - lastCommentsRefreshTime > Utils.CACHE_EXPIRATION) {
+            lastCommentsRefreshTime = currentTime;
+            observeStory();
+        } else {
+            swipeRefreshLayout.setRefreshing(false);
+        }
+
+    }
+
+    private void observeStory() {
+        storyViewModel.getStory().observe(this, new Observer<Story>() {
+            @Override
+            public void onChanged(Story story) {
+                storyViewModel.mStory = story;
+                startObservingComments(story);
+            }
+        });
+    }
+
+    private void startObservingComments(Story story) {
+        storyViewModel.mStoryId = story.getId();
+        storyViewModel.mUrl = story.getUrl();
+        storyViewModel.mTitle = story.getTitle();
+        storyViewModel.mUser = story.getUser();
+        storyViewModel.mPoints = story.getScore();
+        storyViewModel.mNumComments = story.getDescendants();
+        storyViewModel.mTime = story.getTime();
+        storyViewModel.mComments = story.getKids();
+        if(storyViewModel.mComments == null)
+            storyViewModel.mComments = new long[0];
+        for(long idComment : storyViewModel.mComments) {
+            observeComment(idComment);
+        }
+        if(swipeRefreshLayout != null)
+            swipeRefreshLayout.setRefreshing(false);
+    }
+
     private void observeComment(long id) {
         storyViewModel.getComment(id).observe(this, new Observer<Comment>() {
             @Override
@@ -138,7 +179,7 @@ public class StoryFragment extends Fragment {
                 if(!storyViewModel.commentsList.contains(comment)) {
                     int pos = storyViewModel.commentsList.size();
                     long idParent = comment.getParent();
-                    if (idParent == mStoryId) {
+                    if (idParent == storyViewModel.mStoryId) {
                         comment.setLevel(1);
                         storyViewModel.commentsList.add(comment);
                         if (adapter != null)
@@ -161,6 +202,5 @@ public class StoryFragment extends Fragment {
             }
         });
     }
-
 
 }

@@ -13,24 +13,26 @@ import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.repository.HackerNewsRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class HomeViewModel extends ViewModel {
 
     public List<Long> topStoriesIds;
     public List<Story> topStories;
+    public HashMap<Long, Long> lastModified;
     private HackerNewsRepository repository;
-    private LiveData<List<Long>> liveTopStoriesIds;
     public int lastItemLoadedIndex;
 
     public HomeViewModel() {
         repository = HackerNewsRepository.getInstance();
         topStoriesIds = new ArrayList<>();
         topStories = new ArrayList<>();
+        lastModified = new HashMap<>();
     }
 
     public LiveData<List<Long>> getTopStoriesIds() {
-        return liveTopStoriesIds = repository.getTopStoriesIds();
+        return repository.getTopStoriesIds();
     }
 
     public LiveData<Story> getStory(long id) {
