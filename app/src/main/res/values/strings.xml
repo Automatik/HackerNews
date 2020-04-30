@@ -16,4 +16,5 @@
     <string name="fragment_home_articles_list_item_points_description">Total Points</string>
     <string name="fragment_home_articles_list_item_comments_description">Number of Comments</string>
     <string name="menu_main_action_articles_refresh_title">Refresh</string>
+    <string name="item_base_url">news.ycombinator.com</string>
 </resources>

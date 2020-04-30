@@ -63,7 +63,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             //Handle on Click
             //Url would be news.ycombinator.com
 //            holder.mUrl.setVisibility(View.GONE);
-            holder.mUrl.setText("news.ycombinator.com");
+            holder.mUrl.setText(R.string.item_base_url);
         else {
 
             Uri uri = Uri.parse(holder.mStory.getUrl());
@@ -141,7 +141,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         @Override
         public void onClick(View v) {
             //TODO Handle to click in case of not a story with url
-            mListener.onStoryClick(mUrl.getText().toString(), mStory.getId());
+            mListener.onStoryClick(mStory.getUrl(), mStory.getId());
         }
 
     }
