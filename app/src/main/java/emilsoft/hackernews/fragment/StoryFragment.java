@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -38,6 +39,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public static final String ARG_STORY = "argument_story";
 
     private TextView titleText, userText, urlText, timeText, pointsText, numCommentsText;
+    private LinearLayout noCommentsLayout;
     private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
     private CommentsAdapter adapter;
@@ -93,6 +95,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         timeText = binding.storyArticleTime;
         pointsText = binding.storyArticlePoints;
         numCommentsText = binding.storyArticleNumComments;
+        noCommentsLayout = binding.commentsNocommentsLayout;
 
         titleText.setText(storyViewModel.mTitle);
         Uri uri = Uri.parse(storyViewModel.mUrl);
@@ -111,6 +114,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             adapter = new CommentsAdapter(storyViewModel.commentsList);
             recyclerView.setAdapter(adapter);
         }
+        observeStory(false);
     }
 
     @Override
@@ -124,7 +128,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         switch (id) {
             case R.id.action_item_menu_refresh:
                 swipeRefreshLayout.setRefreshing(true);
-                observeStory();
+                observeStory(true);
                 return true;
             default: return super.onOptionsItemSelected(item);
         }
@@ -133,22 +137,30 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     @Override
     public void onRefresh() {
-        observeStory();
+        observeStory(true);
     }
 
-    private void observeStory() {
+    private void observeStory(final boolean refreshComments) {
         long currentTime = System.currentTimeMillis();
         if(currentTime - storyViewModel.lastCommentsRefreshTime > Utils.CACHE_EXPIRATION) {
+            storyViewModel.commentsFound = true;
+            showTextNoComments();
             storyViewModel.lastCommentsRefreshTime = currentTime;
             storyViewModel.getStory().observe(this, new Observer<Story>() {
                 @Override
                 public void onChanged(Story story) {
                     storyViewModel.mStory = story;
-                    int size = storyViewModel.commentsList.size();
-                    storyViewModel.commentsList.clear();
-                    if (adapter != null)
-                        adapter.notifyItemRangeRemoved(0, size);
-                    startObservingComments(story);
+                    if(story.getKids() == null || story.getKids().length == 0) {
+                        storyViewModel.commentsFound = false;
+                        showTextNoComments();
+                    }
+                    if(refreshComments) {
+                        int size = storyViewModel.commentsList.size();
+                        storyViewModel.commentsList.clear();
+                        if (adapter != null)
+                            adapter.notifyItemRangeRemoved(0, size);
+                        startObservingComments(story);
+                    }
                 }
             });
         } else {
@@ -204,6 +216,13 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                         observeComment(idComment);
             }
         });
+    }
+
+    private void showTextNoComments() {
+        if(!storyViewModel.commentsFound)
+            noCommentsLayout.setVisibility(View.VISIBLE);
+        else
+            noCommentsLayout.setVisibility(View.INVISIBLE);
     }
 
 }

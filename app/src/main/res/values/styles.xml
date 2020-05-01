@@ -30,4 +30,9 @@
         <item name="android:textColor">@color/textDisabled</item>
     </style>
 
+    <style name="NoCommentsTextAppearance" parent="TextAppearance.AppCompat.Large">
+        <item name="android:textColor">@color/colorDivider</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
 </resources>
