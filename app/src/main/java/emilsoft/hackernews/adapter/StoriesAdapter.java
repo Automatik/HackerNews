@@ -57,7 +57,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         holder.mTitle.setText(holder.mStory.getTitle());
         holder.mNumComments.setText(Integer.toString(holder.mStory.getDescendants()));
         // Fix for stories that don't have url like AskHN
-        if(holder.mStory.getUrl() == null)
+        if(holder.mStory.getUrl() == null || holder.mStory.getUrl().isEmpty())
             //Handle on Click
             //Url would be news.ycombinator.com
 //            holder.mUrl.setVisibility(View.GONE);
