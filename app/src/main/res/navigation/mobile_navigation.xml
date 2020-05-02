@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_nav_home_to_nav_story"
             app:destination="@id/nav_story" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_ask"
+            app:destination="@id/nav_ask" />
     </fragment>
 
     <fragment
@@ -27,6 +30,12 @@
         android:name="emilsoft.hackernews.fragment.StoryFragment"
         android:label="Story"
         tools:layout="@layout/fragment_story" />
+
+    <fragment
+        android:id="@+id/nav_ask"
+        android:name="emilsoft.hackernews.fragment.AskFragment"
+        android:label="Ask"
+        tools:layout="@layout/fragment_askstory" />
 
     <fragment
         android:id="@+id/nav_gallery"

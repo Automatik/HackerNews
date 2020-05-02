@@ -1,11 +1,9 @@
 package emilsoft.hackernews.adapter;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,17 +17,17 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.lang.ref.WeakReference;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.api.Type;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentHomeArticlesListItemBinding;
+import emilsoft.hackernews.fragment.AskFragment;
 import emilsoft.hackernews.fragment.StoryFragment;
 
 public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHolder> {
@@ -87,7 +85,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         context = recyclerView.getContext();
     }
 
-    private OnStoryClickListener onStoryClickListener = new OnStoryClickListener() {
+    private OnItemClickListener onStoryClickListener = new OnItemClickListener() {
         @Override
         public void onStoryClick(String url, long storyId) {
             try {
@@ -98,6 +96,15 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             } catch (ActivityNotFoundException ex) {
                 Toast.makeText(context, "No Browser found to open link", Toast.LENGTH_SHORT).show();
             }
+        }
+
+        @Override
+        public void onAskClick(View view, Story askStory) {
+            NavController navController = Navigation.findNavController(view);
+            Bundle args = new Bundle();
+            args.putParcelable(AskFragment.ARG_ASK, askStory);
+            args.putBoolean(AskFragment.ARG_VIEWING_ASK, true);
+            navController.navigate(R.id.action_nav_home_to_nav_ask, args);
         }
     };
 
@@ -112,9 +119,9 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         public final TextView mUser;
         public final TextView mTime;
         public Story mStory;
-        private OnStoryClickListener mListener;
+        private OnItemClickListener mListener;
 
-        public ViewHolder(@NonNull FragmentHomeArticlesListItemBinding binding, OnStoryClickListener listener) {
+        public ViewHolder(@NonNull FragmentHomeArticlesListItemBinding binding, OnItemClickListener listener) {
             super(binding.getRoot());
             mListener = listener;
             mBinding = binding;
@@ -127,8 +134,14 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
                     //String url = mStory.getUrl();
                     NavController navController = Navigation.findNavController(view);
                     Bundle args = new Bundle();
-                    args.putParcelable(StoryFragment.ARG_STORY, mStory);
-                    navController.navigate(R.id.action_nav_home_to_nav_story, args);
+                    if(Story.isAsk(mStory)) {
+                        args.putParcelable(AskFragment.ARG_ASK, mStory);
+                        args.putBoolean(AskFragment.ARG_VIEWING_ASK, false);
+                        navController.navigate(R.id.action_nav_home_to_nav_ask, args);
+                    } else {
+                        args.putParcelable(StoryFragment.ARG_STORY, mStory);
+                        navController.navigate(R.id.action_nav_home_to_nav_story, args);
+                    }
                 }
             });
             mUrl = binding.articleUrl;
@@ -140,15 +153,27 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
         @Override
         public void onClick(View v) {
-            //TODO Handle to click in case of not a story with url
-            mListener.onStoryClick(mStory.getUrl(), mStory.getId());
+            //Handle to click in case of not a story with url
+            switch (mStory.getType()) {
+                case STORY_TYPE:
+                    if(Story.isAsk(mStory))
+                        mListener.onAskClick(v, mStory);
+                    else
+                        mListener.onStoryClick(mStory.getUrl(), mStory.getId());
+                    break;
+                case JOB_TYPE:
+                case POLL_TYPE:
+                default: break;
+            }
         }
 
     }
 
-    private interface OnStoryClickListener{
+    private interface OnItemClickListener{
 
         void onStoryClick(String url, long storyId);
+
+        void onAskClick(View view, Story askStory);
 
     }
 }

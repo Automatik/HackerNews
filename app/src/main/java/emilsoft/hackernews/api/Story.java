@@ -18,7 +18,7 @@ public class Story extends Item {
         }
     };
 
-    Story(){}
+    public Story(){}
 
     public Story(Parcel in) {
         super(in);
@@ -28,6 +28,7 @@ public class Story extends Item {
         this.score = in.readInt();
         this.title = in.readString();
         this.url = in.readString();
+        this.text = in.readString();
     }
 
     /**
@@ -55,6 +56,11 @@ public class Story extends Item {
      */
     private String url;
 
+    /**
+     * The text written by the user. Valid only for Ask HN
+     */
+    private String text;
+
     public int getDescendants() {
         return descendants;
     }
@@ -75,6 +81,10 @@ public class Story extends Item {
         return url;
     }
 
+    public String getText() {
+        return text;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
@@ -84,6 +94,10 @@ public class Story extends Item {
         dest.writeInt(score);
         dest.writeString(title);
         dest.writeString(url);
+        dest.writeString(text);
+    }
 
+    public static boolean isAsk(Story story) {
+        return story.getUrl() == null && story.getText() != null;
     }
 }
