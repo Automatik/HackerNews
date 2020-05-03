@@ -61,6 +61,8 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         storyViewModel = ViewModelProviders.of(this).get(StoryViewModel.class);
 
         Bundle args = getArguments();
+        if(savedInstanceState != null)
+            args = savedInstanceState;
         if(args != null) {
             Story mStory = args.getParcelable(ARG_STORY);
             storyViewModel.mStory = mStory;
@@ -115,6 +117,12 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             recyclerView.setAdapter(adapter);
         }
         observeStory(false);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(ARG_STORY, storyViewModel.mStory);
     }
 
     @Override

@@ -62,6 +62,8 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
         askJobViewModel = ViewModelProviders.of(this).get(AskJobViewModel.class);
 
         Bundle args = getArguments();
+        if(savedInstanceState != null)
+            args = savedInstanceState;
         if(args != null) {
             askJobViewModel.isAsk = args.getBoolean(ARG_IS_ASK_OR_JOB);
             Item item = args.getParcelable(ARG_ASK_JOB);
@@ -151,6 +153,17 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
         } else
             showCommentsView(false);
         observeItem(false);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if(askJobViewModel.isAsk)
+            outState.putParcelable(ARG_ASK_JOB, askJobViewModel.askStory);
+        else
+            outState.putParcelable(ARG_ASK_JOB, askJobViewModel.job);
+        outState.putBoolean(ARG_IS_ASK_OR_JOB, askJobViewModel.isAsk);
+        outState.putBoolean(ARG_VIEWING_ASK_JOB, askJobViewModel.isAskTextViewed);
     }
 
     @Override
