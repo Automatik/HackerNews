@@ -48,35 +48,35 @@ public class Item implements Parcelable {
     /**
      * The item's unique id.
      */
-    private long id;
+    long id;
 
     /**
      * true if the item is deleted.
      */
     @SerializedName("deleted")
-    private boolean isDeleted;
+    boolean isDeleted;
 
     /**
      * The type of item. One of "job", "story", "comment", "poll", or "pollopt".
      */
-    private Type type;
+    Type type;
 
     /**
      * The username of the item's author.
      */
     @SerializedName("by")
-    private String user;
+    String user;
 
     /**
      * Creation date of the item, in Unix Time.
      */
-    private long time;
+    long time;
 
     /**
      * true if the item is dead.
      */
     @SerializedName("dead")
-    private boolean isDead;
+    boolean isDead;
 
     public long getId(){
         return id;

@@ -17,6 +17,21 @@ public interface HackerNewsApi {
     @GET("topstories.json")
     Observable<List<Long>> getTopStories();
 
+    @GET("newstories.json")
+    Observable<List<Long>> getNewStories();
+
+    @GET("beststories.json")
+    Observable<List<Long>> getBestStories();
+
+    @GET("askstories")
+    Observable<List<Long>> getAskStories();
+
+    @GET("showstories")
+    Observable<List<Long>> getShowStories();
+
+    @GET("jobstories")
+    Observable<List<Long>> getJobStories();
+
     @GET("item/{id}.json")
     Observable<Story> getStory(@Path("id") long id);
 

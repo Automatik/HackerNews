@@ -34,32 +34,32 @@ public class Ask extends Item {
     /**
      * In the case of stories or polls, the total comment count.
      */
-    private int descendants;
+    int descendants;
 
     /**
      * The ids of the item's comments, in ranked display order.
      */
-    private long[] kids;
+    long[] kids;
 
     /**
      * The story's score, or the votes for a pollopt.
      */
-    private int score;
+    int score;
 
     /**
      * The comment, story or poll text. HTML.
      */
-    private String text;
+    String text;
 
     /**
      * The title of the story, poll or job.
      */
-    private String title;
+    String title;
 
     /**
      * The URL of the story.
      */
-    private String url;
+    String url;
 
     public int getDescendants() {
         return descendants;

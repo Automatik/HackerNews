@@ -16,6 +16,7 @@ import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
+import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -40,23 +41,41 @@ public class HackerNewsRepository {
     }
 
     public LiveData<List<Long>> getTopStoriesIds() {
+        return getStories(hackerNewsApi.getTopStories());
+    }
+
+    public LiveData<List<Long>> getNewStoriesIds() {
+        return getStories(hackerNewsApi.getNewStories());
+    }
+
+    public LiveData<List<Long>> getBestStoriesIds() {
+        return getStories(hackerNewsApi.getBestStories());
+    }
+
+    public LiveData<List<Long>> getAskStoriesIds() {
+        return getStories(hackerNewsApi.getAskStories());
+    }
+
+    public LiveData<List<Long>> getShowStoriesIds() {
+        return getStories(hackerNewsApi.getShowStories());
+    }
+
+    public LiveData<List<Long>> getJobStoriesIds() {
+        return getStories(hackerNewsApi.getJobStories());
+    }
+
+    private LiveData<List<Long>> getStories(Observable<List<Long>> observable) {
         final MutableLiveData<List<Long>> data = new MutableLiveData<>();
-        hackerNewsApi.getTopStories()
-                .subscribeOn(Schedulers.io())
+        observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<List<Long>>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
+                    public void onSubscribe(Disposable d) {}
 
                     @Override
                     public void onNext(List<Long> ids) {
-                        if(ids == null) {
-                            Log.v(TAG, "List of Top Stories ids is null");
+                        if(ids == null)
                             return;
-                        }
-                        Log.v(TAG, "Top Stories retrieved");
                         data.setValue(ids);
                     }
 
@@ -66,11 +85,8 @@ public class HackerNewsRepository {
                     }
 
                     @Override
-                    public void onComplete() {
-
-                    }
+                    public void onComplete() {}
                 });
-
         return data;
     }
 

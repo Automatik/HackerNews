@@ -1,7 +1,6 @@
 package emilsoft.hackernews.fragment;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,18 +16,24 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.List;
 
-import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.adapter.StoriesAdapter;
-import emilsoft.hackernews.api.HackerNewsApi;
+import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.databinding.FragmentHomeBinding;
 import emilsoft.hackernews.viewmodel.HomeViewModel;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.api.Story;
 
-import static emilsoft.hackernews.MainActivity.TAG;
-
 public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+
+    public static final int TOP_STORIES_VIEW = 0;
+    public static final int BEST_STORIES_VIEW = 1;
+    public static final int NEW_STORIES_VIEW = 2;
+    public static final int ASK_STORIES_VIEW = 3;
+    public static final int SHOW_STORIES_VIEW = 4;
+    public static final int JOB_STORIES_VIEW = 5;
+
+    public static final String ARG_VIEW_STORIES = "arg_view_stories";
 
     private static final int NUM_LOAD_ITEMS = 20;
 
@@ -37,9 +42,29 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     private StoriesAdapter adapter;
     private HomeViewModel homeViewModel;
 
+    public static HomeFragment newInstance(int argViewStories) {
+        Bundle args = new Bundle();
+        args.putInt(ARG_VIEW_STORIES, argViewStories);
+        HomeFragment fragment = new HomeFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
+
+        Bundle args = getArguments();
+        if(savedInstanceState != null)
+            args = savedInstanceState;
+        if(args != null) {
+            homeViewModel.argViewStories = args.getInt(ARG_VIEW_STORIES);
+        }
+    }
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
         FragmentHomeBinding binding = FragmentHomeBinding.inflate(inflater, container, false);
         swipeRefreshLayout = binding.articlesSwipeRefresh;
         recyclerView = binding.articlesList;
@@ -52,11 +77,17 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if(homeViewModel.topStories != null) {
-            adapter = new StoriesAdapter(homeViewModel.topStories);
+        if(homeViewModel.stories != null) {
+            adapter = new StoriesAdapter(homeViewModel.stories);
             recyclerView.setAdapter(adapter);
         }
         refreshArticles();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(ARG_VIEW_STORIES, homeViewModel.argViewStories);
     }
 
     @Override
@@ -79,15 +110,15 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
             super.onScrollStateChanged(recyclerView, newState);
-            int numIds = homeViewModel.topStoriesIds.size();
+            int numIds = homeViewModel.storiesIds.size();
             if(newState == RecyclerView.SCROLL_STATE_IDLE && scrollY > 0 && numIds > 0) {
                 //The RecyclerView is not currently scrolling.
                 int startIndex = homeViewModel.lastItemLoadedIndex + 1;
                 int i = startIndex;
 
                 //First condition to check if the user finished to load the 500 top stories ids
-                while (i < homeViewModel.topStoriesIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
-                    observeStory(homeViewModel.topStoriesIds.get(i));
+                while (i < homeViewModel.storiesIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
+                    observeItem(homeViewModel.storiesIds.get(i));
                     i++;
                 }
 //                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
@@ -112,18 +143,18 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         long currentTime = System.currentTimeMillis();
         if(currentTime - homeViewModel.lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
             homeViewModel.lastIdsRefreshTime = currentTime;
-            homeViewModel.getTopStoriesIds().observe(this, new Observer<List<Long>>() {
+            homeViewModel.getStoriesIds().observe(this, new Observer<List<Long>>() {
                 @Override
                 public void onChanged(List<Long> ids) {
-                    homeViewModel.topStoriesIds.clear();
-                    int size = homeViewModel.topStories.size();
-                    homeViewModel.topStories.clear();
+                    homeViewModel.storiesIds.clear();
+                    int size = homeViewModel.stories.size();
+                    homeViewModel.stories.clear();
                     if (adapter != null)
                         adapter.notifyItemRangeRemoved(0, size);
-                    homeViewModel.topStoriesIds.addAll(ids);
+                    homeViewModel.storiesIds.addAll(ids);
                     homeViewModel.lastItemLoadedIndex = 0;
                     for (int i = 0; i < NUM_LOAD_ITEMS; i++) {
-                        observeStory(ids.get(i));
+                        observeItem(ids.get(i));
                     }
                     homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
                     swipeRefreshLayout.setRefreshing(false);
@@ -134,17 +165,14 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
-    private void observeStory(long id) {
-        homeViewModel.getStory(id).observe(this, new Observer<Story>() {
-            @Override
-            public void onChanged(Story story) {
-                if(!homeViewModel.topStories.contains(story)) {
-                    int pos = homeViewModel.topStories.size();
-                    homeViewModel.topStories.add(story);
+    private void observeItem(long id) {
+        homeViewModel.getItem(id).observe(this, (item) -> {
+                if(!homeViewModel.stories.contains(item)) {
+                    int pos = homeViewModel.stories.size();
+                    homeViewModel.stories.add(item);
                     if (adapter != null)
                         adapter.notifyItemInserted(pos);
                 }
-            }
         });
     }
 }

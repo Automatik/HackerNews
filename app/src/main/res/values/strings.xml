@@ -19,4 +19,5 @@
     <string name="item_base_url">news.ycombinator.com</string>
     <string name="fragment_story_imageview_nocomments_description">No Comments</string>
     <string name="fragment_story_nocomments_text">No Comments Yet</string>
+    <string name="fragment_job_icon_description">Job Icon</string>
 </resources>

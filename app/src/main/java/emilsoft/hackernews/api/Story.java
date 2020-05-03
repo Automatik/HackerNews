@@ -34,32 +34,32 @@ public class Story extends Item {
     /**
      * In the case of stories or polls, the total comment count.
      */
-    private int descendants;
+    int descendants;
 
     /**
      * The ids of the item's comments, in ranked display order.
      */
-    private long[] kids;
+    long[] kids;
 
     /**
      * The story's score, or the votes for a pollopt.
      */
-    private int score;
+    int score;
 
     /**
      * The title of the story, poll or job.
      */
-    private String title;
+    String title;
 
     /**
      * The URL of the story.
      */
-    private String url;
+    String url;
 
     /**
      * The text written by the user. Valid only for Ask HN
      */
-    private String text;
+    String text;
 
     public int getDescendants() {
         return descendants;
@@ -99,5 +99,21 @@ public class Story extends Item {
 
     public static boolean isAsk(Story story) {
         return story.getUrl() == null && story.getText() != null;
+    }
+
+    //This is needed in TopStories which returns also jobs
+    public static Job castStoryToJob(Story story) {
+        Job job = new Job();
+        job.id = story.id;
+        job.isDeleted = story.isDeleted;
+        job.isDead = story.isDead;
+        job.type = story.type;
+        job.user = story.user;
+        job.time = story.time;
+        job.score = story.score;
+        job.text = story.text;
+        job.title = story.title;
+        job.url = story.url;
+        return job;
     }
 }

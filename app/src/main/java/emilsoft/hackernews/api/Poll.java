@@ -35,32 +35,32 @@ public class Poll extends Item {
     /**
      * In the case of stories or polls, the total comment count.
      */
-    private int descendants;
+    int descendants;
 
     /**
      * The ids of the item's comments, in ranked display order.
      */
-    private long[] kids;
+    long[] kids;
 
     /**
      * The story's score, or the votes for a pollopt.
      */
-    private int score;
+    int score;
 
     /**
      * A list of related pollopts, in display order.
      */
-    private long[] parts;
+    long[] parts;
 
     /**
      * The comment, story or poll text. HTML.
      */
-    private String text;
+    String text;
 
     /**
      * The title of the story, poll or job.
      */
-    private String title;
+    String title;
 
     public int getDescendants() {
         return descendants;

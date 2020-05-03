@@ -8,6 +8,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -96,6 +97,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
         pointsText = binding.storyAskJobPoints;
         numCommentsText = binding.storyAskJobNumComments;
         askJobText = binding.storyAskJobText;
+        ImageView jobIcon = binding.storyAskJobIcon;
 
         askJobStoryCard.setOnClickListener((v) -> {
             if(!askJobViewModel.isAskTextViewed) {
@@ -121,6 +123,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
             pointsText.setText(String.valueOf(askJobViewModel.askStory.getScore()));
             numCommentsText.setText(String.valueOf(askJobViewModel.askStory.getDescendants()));
             askJobText.setText(Utils.fromHtml(askJobViewModel.askStory.getText()));
+            jobIcon.setVisibility(View.GONE);
         }
         if(!askJobViewModel.isAsk && askJobViewModel.job != null) {
             titleText.setText(askJobViewModel.job.getTitle());
@@ -135,6 +138,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
             pointsText.setText(String.valueOf(askJobViewModel.job.getScore()));
             numCommentsText.setText(String.valueOf(0));
             askJobText.setText(Utils.fromHtml(askJobViewModel.job.getText()));
+            jobIcon.setVisibility(View.VISIBLE);
         }
         return binding.getRoot();
     }

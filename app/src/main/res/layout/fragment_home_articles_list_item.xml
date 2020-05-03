@@ -84,7 +84,8 @@
             app:layout_constraintStart_toEndOf="@id/article_user"
             app:layout_constraintEnd_toStartOf="@id/article_time"
             app:layout_constraintBottom_toBottomOf="parent"
-            tools:visibility="visible"/>
+            tools:visibility="visible"
+            android:contentDescription="@string/fragment_job_icon_description" />
 
         <TextView
             android:id="@+id/article_time"
