@@ -10,8 +10,10 @@ import org.reactivestreams.Subscription;
 
 import java.util.List;
 
+import emilsoft.hackernews.api.Ask;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.HackerNewsApi;
+import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
 import io.reactivex.Observer;
@@ -97,6 +99,35 @@ public class HackerNewsRepository {
                     @Override
                     public void onNext(Story story) {
                         data.setValue(story);
+                    }
+                });
+        return data;
+    }
+
+    public LiveData<Job> getJob(long id) {
+        final MutableLiveData<Job> data = new MutableLiveData<>();
+        hackerNewsApi.getJob(id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Job>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Job job) {
+                        data.setValue(job);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
                     }
                 });
         return data;

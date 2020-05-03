@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,19 +24,20 @@ import java.util.List;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.HackerNewsApi;
+import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.Story;
-import emilsoft.hackernews.api.Type;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentHomeArticlesListItemBinding;
-import emilsoft.hackernews.fragment.AskFragment;
+import emilsoft.hackernews.fragment.AskJobFragment;
 import emilsoft.hackernews.fragment.StoryFragment;
 
 public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHolder> {
 
-    private List<Story> stories;
+    private List<? extends Item> stories;
     private Context context;
 
-    public StoriesAdapter(List<Story> stories) {
+    public StoriesAdapter(List<? extends Item> stories) {
         if (stories == null)
             this.stories = new ArrayList<>();
         else
@@ -53,23 +55,43 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.mStory = stories.get(position);
-        holder.mTitle.setText(holder.mStory.getTitle());
-        holder.mNumComments.setText(Integer.toString(holder.mStory.getDescendants()));
-        // Fix for stories that don't have url like AskHN
-        if(holder.mStory.getUrl() == null || holder.mStory.getUrl().isEmpty())
-            //Handle on Click
-            //Url would be news.ycombinator.com
-//            holder.mUrl.setVisibility(View.GONE);
-            holder.mUrl.setText(R.string.item_base_url);
-        else {
-
-            Uri uri = Uri.parse(holder.mStory.getUrl());
-            holder.mUrl.setText(uri.getHost());
+        holder.mItem = stories.get(position);
+        String titleText = "", numCommentsText = "", urlText = "", pointsText = "", userText = "", timeText = "";
+        if(holder.mItem instanceof Story) {
+            Story mStory = (Story) holder.mItem;
+            titleText = mStory.getTitle();
+            numCommentsText = Integer.toString(mStory.getDescendants());
+            if(mStory.getUrl() == null || mStory.getUrl().isEmpty())
+                urlText = context.getString(R.string.item_base_url);
+            else {
+                Uri uri = Uri.parse(mStory.getUrl());
+                urlText = uri.getHost();
+            }
+            pointsText = Integer.toString(mStory.getScore());
+            userText = mStory.getUser();
+            timeText = Utils.getAbbreviatedTimeSpan(mStory.getTime());
+            holder.mJobIcon.setVisibility(View.GONE);
+        } else if(holder.mItem instanceof Job) {
+            Job mJob = (Job) holder.mItem;
+            titleText = mJob.getTitle();
+            numCommentsText = Integer.toString(0);
+            if(mJob.getUrl() == null || mJob.getUrl().isEmpty())
+                urlText = context.getString(R.string.item_base_url);
+            else {
+                Uri uri = Uri.parse(mJob.getUrl());
+                urlText = uri.getHost();
+            }
+            pointsText = Integer.toString(mJob.getScore());
+            userText = mJob.getUser();
+            timeText = Utils.getAbbreviatedTimeSpan(mJob.getTime());
+            holder.mJobIcon.setVisibility(View.VISIBLE);
         }
-        holder.mPoints.setText(Integer.toString(holder.mStory.getScore()));
-        holder.mUser.setText(holder.mStory.getUser());
-        holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mStory.getTime()));
+        holder.mTitle.setText(titleText);
+        holder.mNumComments.setText(numCommentsText);
+        holder.mUrl.setText(urlText);
+        holder.mPoints.setText(pointsText);
+        holder.mUser.setText(userText);
+        holder.mTime.setText(timeText);
     }
 
     @Override
@@ -102,26 +124,39 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         public void onAskClick(View view, Story askStory) {
             NavController navController = Navigation.findNavController(view);
             Bundle args = new Bundle();
-            args.putParcelable(AskFragment.ARG_ASK, askStory);
-            args.putBoolean(AskFragment.ARG_VIEWING_ASK, true);
+            args.putParcelable(AskJobFragment.ARG_ASK_JOB, askStory);
+            args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
+            args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, true);
+            navController.navigate(R.id.action_nav_home_to_nav_ask, args);
+        }
+
+        @Override
+        public void onJobClick(View view, Job job) {
+            NavController navController = Navigation.findNavController(view);
+            Bundle args = new Bundle();
+            args.putParcelable(AskJobFragment.ARG_ASK_JOB, job);
+            args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
+            args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, false);
             navController.navigate(R.id.action_nav_home_to_nav_ask, args);
         }
     };
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public final FragmentHomeArticlesListItemBinding mBinding;
-        public final ConstraintLayout mCommentsLayout;
-        public final TextView mTitle;
-        public final TextView mNumComments;
-        public final TextView mUrl;
-        public final TextView mPoints;
-        public final TextView mUser;
-        public final TextView mTime;
-        public Story mStory;
+        final FragmentHomeArticlesListItemBinding mBinding;
+        final ConstraintLayout mCommentsLayout;
+        final TextView mTitle;
+        final TextView mNumComments;
+        final TextView mUrl;
+        final TextView mPoints;
+        final TextView mUser;
+        final TextView mTime;
+        final ImageView mJobIcon;
+
+        Item mItem;
         private OnItemClickListener mListener;
 
-        public ViewHolder(@NonNull FragmentHomeArticlesListItemBinding binding, OnItemClickListener listener) {
+        ViewHolder(@NonNull FragmentHomeArticlesListItemBinding binding, OnItemClickListener listener) {
             super(binding.getRoot());
             mListener = listener;
             mBinding = binding;
@@ -134,13 +169,20 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
                     //String url = mStory.getUrl();
                     NavController navController = Navigation.findNavController(view);
                     Bundle args = new Bundle();
-                    if(Story.isAsk(mStory)) {
-                        args.putParcelable(AskFragment.ARG_ASK, mStory);
-                        args.putBoolean(AskFragment.ARG_VIEWING_ASK, false);
-                        navController.navigate(R.id.action_nav_home_to_nav_ask, args);
-                    } else {
-                        args.putParcelable(StoryFragment.ARG_STORY, mStory);
-                        navController.navigate(R.id.action_nav_home_to_nav_story, args);
+                    if(mItem instanceof Story) {
+                        Story mStory = (Story) mItem;
+                        if (Story.isAsk(mStory)) {
+                            args.putParcelable(AskJobFragment.ARG_ASK_JOB, mStory);
+                            args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, false);
+                            args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, true);
+                            navController.navigate(R.id.action_nav_home_to_nav_ask, args);
+                        } else {
+                            args.putParcelable(StoryFragment.ARG_STORY, mStory);
+                            navController.navigate(R.id.action_nav_home_to_nav_story, args);
+                        }
+                    } else if(mItem instanceof Job) {
+                        Job mJob = (Job) mItem;
+                        args.putParcelable(AskJobFragment.ARG_ASK_JOB, mJob);
                     }
                 }
             });
@@ -148,20 +190,29 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             mPoints = binding.articlePoints;
             mUser = binding.articleUser;
             mTime = binding.articleTime;
+            mJobIcon = binding.articleJobIcon;
             mBinding.getRoot().setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
             //Handle to click in case of not a story with url
-            switch (mStory.getType()) {
+            switch (mItem.getType()) {
                 case STORY_TYPE:
-                    if(Story.isAsk(mStory))
-                        mListener.onAskClick(v, mStory);
-                    else
-                        mListener.onStoryClick(mStory.getUrl(), mStory.getId());
+                    if(mItem instanceof Story) {
+                        Story mStory = (Story) mItem;
+                        if(Story.isAsk(mStory))
+                            mListener.onAskClick(v, mStory);
+                        else
+                            mListener.onStoryClick(mStory.getUrl(), mStory.getId());
+                    }
                     break;
                 case JOB_TYPE:
+                    if(mItem instanceof Job) {
+                        Job mJob = (Job) mItem;
+                        mListener.onJobClick(v, mJob);
+                    }
+                    break;
                 case POLL_TYPE:
                 default: break;
             }
@@ -174,6 +225,8 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         void onStoryClick(String url, long storyId);
 
         void onAskClick(View view, Story askStory);
+
+        void onJobClick(View view, Job job);
 
     }
 }

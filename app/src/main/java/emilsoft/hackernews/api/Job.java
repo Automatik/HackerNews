@@ -48,6 +48,22 @@ public class Job extends Item {
      */
     private String url;
 
+    public int getScore() {
+        return score;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
