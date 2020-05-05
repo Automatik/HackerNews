@@ -14,10 +14,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -60,7 +63,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        askJobViewModel = ViewModelProviders.of(this).get(AskJobViewModel.class);
+        askJobViewModel = new ViewModelProvider(this).get(AskJobViewModel.class);
 
         Bundle args = getArguments();
         if(savedInstanceState != null)
@@ -188,6 +191,18 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        ActionBar actionBar = null;
+        if(getActivity() != null && (actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar()) != null) {
+            if (askJobViewModel.isAsk)
+                actionBar.setTitle("Ask");
+            else
+                actionBar.setTitle("Job");
+        }
+    }
+
+    @Override
     public void onRefresh() {
         if(askJobViewModel.isAskTextViewed)
             observeItem(false);
@@ -208,7 +223,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
             askJobViewModel.commentsFound = true;
             showTextNoComments();
             askJobViewModel.lastCommentsRefreshTime = currentTime;
-            askJobViewModel.getJob().observe(this, (job) -> {
+            askJobViewModel.getJob().observe(getViewLifecycleOwner(), (job) -> {
                 askJobViewModel.job = job;
                 askJobViewModel.commentsFound = false;
                 showTextNoComments();
@@ -224,7 +239,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
             askJobViewModel.commentsFound = true;
             showTextNoComments();
             askJobViewModel.lastCommentsRefreshTime = currentTime;
-            askJobViewModel.getAskStory().observe(this, new Observer<Story>() {
+            askJobViewModel.getAskStory().observe(getViewLifecycleOwner(), new Observer<Story>() {
                 @Override
                 public void onChanged(Story story) {
                     askJobViewModel.askStory = story;
@@ -256,7 +271,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
 
     private void observeComment(long id) {
-        askJobViewModel.getComment(id).observe(this, new Observer<Comment>() {
+        askJobViewModel.getComment(id).observe(getViewLifecycleOwner(), new Observer<Comment>() {
             @Override
             public void onChanged(Comment comment) {
                 // Avoid inserting duplicates

@@ -23,13 +23,13 @@ public interface HackerNewsApi {
     @GET("beststories.json")
     Observable<List<Long>> getBestStories();
 
-    @GET("askstories")
+    @GET("askstories.json")
     Observable<List<Long>> getAskStories();
 
-    @GET("showstories")
+    @GET("showstories.json")
     Observable<List<Long>> getShowStories();
 
-    @GET("jobstories")
+    @GET("jobstories.json")
     Observable<List<Long>> getJobStories();
 
     @GET("item/{id}.json")

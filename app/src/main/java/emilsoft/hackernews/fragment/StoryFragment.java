@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -58,7 +59,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        storyViewModel = ViewModelProviders.of(this).get(StoryViewModel.class);
+        storyViewModel = new ViewModelProvider(this).get(StoryViewModel.class);
 
         Bundle args = getArguments();
         if(savedInstanceState != null)
@@ -154,7 +155,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             storyViewModel.commentsFound = true;
             showTextNoComments();
             storyViewModel.lastCommentsRefreshTime = currentTime;
-            storyViewModel.getStory().observe(this, new Observer<Story>() {
+            storyViewModel.getStory().observe(getViewLifecycleOwner(), new Observer<Story>() {
                 @Override
                 public void onChanged(Story story) {
                     storyViewModel.mStory = story;

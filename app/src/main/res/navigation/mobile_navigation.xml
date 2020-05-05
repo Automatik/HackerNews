@@ -3,19 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_home">
+    app:startDestination="@+id/nav_topstories">
 
     <fragment
-        android:id="@+id/nav_home"
+        android:id="@+id/nav_topstories"
         android:name="emilsoft.hackernews.fragment.HomeFragment"
-        android:label="@string/menu_home"
+        android:label="@string/menu_topstories"
         tools:layout="@layout/fragment_home" >
         <action
-            android:id="@+id/action_nav_home_to_nav_story"
+            android:id="@+id/action_nav_topstories_to_nav_story"
             app:destination="@id/nav_story" />
         <action
-            android:id="@+id/action_nav_home_to_nav_ask"
+            android:id="@+id/action_nav_topstories_to_nav_ask"
             app:destination="@id/nav_ask" />
+        <argument
+            android:name="arg_view_stories"
+            app:argType="integer"
+            android:defaultValue="0" />
     </fragment>
 
     <fragment
@@ -38,32 +42,78 @@
         tools:layout="@layout/fragment_askstory" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="emilsoft.hackernews.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:id="@+id/nav_newstories"
+        android:name="emilsoft.hackernews.fragment.HomeFragment"
+        android:label="@string/menu_newstories"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_newstories_to_nav_story"
+            app:destination="@id/nav_story" />
+        <action
+            android:id="@+id/action_nav_newstories_to_nav_ask"
+            app:destination="@id/nav_ask" />
+        <argument
+            android:name="arg_view_stories"
+            app:argType="integer"
+            android:defaultValue="2" />
+    </fragment>
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="emilsoft.hackernews.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_beststories"
+        android:name="emilsoft.hackernews.fragment.HomeFragment"
+        android:label="@string/menu_beststories"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_beststories_to_nav_story"
+            app:destination="@id/nav_story" />
+        <action
+            android:id="@+id/action_nav_beststories_to_nav_ask"
+            app:destination="@id/nav_ask" />
+        <argument
+            android:name="arg_view_stories"
+            app:argType="integer"
+            android:defaultValue="1" />
+    </fragment>
 
     <fragment
-        android:id="@+id/nav_tools"
-        android:name="emilsoft.hackernews.ui.tools.ToolsFragment"
-        android:label="@string/menu_tools"
-        tools:layout="@layout/fragment_tools" />
+        android:id="@+id/nav_askstories"
+        android:name="emilsoft.hackernews.fragment.HomeFragment"
+        android:label="@string/menu_askstories"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_askstories_to_nav_ask"
+            app:destination="@id/nav_ask" />
+        <argument
+            android:name="arg_view_stories"
+            app:argType="integer"
+            android:defaultValue="3" />
+    </fragment>
 
     <fragment
-        android:id="@+id/nav_share"
-        android:name="emilsoft.hackernews.ui.share.ShareFragment"
-        android:label="@string/menu_share"
-        tools:layout="@layout/fragment_share" />
+        android:id="@+id/nav_showstories"
+        android:name="emilsoft.hackernews.fragment.HomeFragment"
+        android:label="@string/menu_showstories"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_showstories_to_nav_story"
+            app:destination="@id/nav_story" />
+        <argument
+            android:name="arg_view_stories"
+            app:argType="integer"
+            android:defaultValue="4" />
+    </fragment>
 
     <fragment
-        android:id="@+id/nav_send"
-        android:name="emilsoft.hackernews.ui.send.SendFragment"
-        android:label="@string/menu_send"
-        tools:layout="@layout/fragment_send" />
+        android:id="@+id/nav_jobstories"
+        android:name="emilsoft.hackernews.fragment.HomeFragment"
+        android:label="@string/menu_jobstories"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_jobstories_to_nav_ask"
+            app:destination="@id/nav_ask" />
+        <argument
+            android:name="arg_view_stories"
+            app:argType="integer"
+            android:defaultValue="5" />
+    </fragment>
 </navigation>

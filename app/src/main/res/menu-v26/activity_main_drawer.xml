@@ -1,42 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:showIn="navigation_view">
 
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_topstories"
             android:icon="@drawable/ic_trending_up_24dp"
-            app:iconTint="@color/black"
+            android:iconTint="@color/black"
             android:title="@string/menu_topstories" />
         <item
             android:id="@+id/nav_newstories"
             android:icon="@drawable/ic_new_releases_24dp"
-            app:iconTint="@color/black"
+            android:iconTint="@color/black"
             android:title="@string/menu_newstories" />
         <item
             android:id="@+id/nav_beststories"
             android:icon="@drawable/ic_thumb_up_white_24dp"
-            app:iconTint="@color/black"
+            android:iconTint="@color/black"
             android:title="@string/menu_beststories" />
-
         <item
             android:id="@+id/nav_showstories"
             android:icon="@drawable/ic_assignment_turned_in_24dp"
-            app:iconTint="@color/black"
+            android:iconTint="@color/black"
             android:title="@string/menu_showstories" />
 
         <item
             android:id="@+id/nav_askstories"
             android:icon="@drawable/ic_live_help_24dp"
-            app:iconTint="@color/black"
+            android:iconTint="@color/black"
             android:title="@string/menu_askstories" />
 
         <item
             android:id="@+id/nav_jobstories"
             android:icon="@drawable/ic_work_24dp"
-            app:iconTint="@color/black"
+            android:iconTint="@color/black"
             android:title="@string/menu_jobstories" />
     </group>
 

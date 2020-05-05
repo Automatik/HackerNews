@@ -10,7 +10,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.navigation.NavController;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -53,13 +55,15 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
+        //homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
+        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
         Bundle args = getArguments();
         if(savedInstanceState != null)
             args = savedInstanceState;
         if(args != null) {
             homeViewModel.argViewStories = args.getInt(ARG_VIEW_STORIES);
+            homeViewModel.lastIdsRefreshTime = 0;
         }
     }
 
@@ -78,7 +82,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if(homeViewModel.stories != null) {
-            adapter = new StoriesAdapter(homeViewModel.stories);
+            adapter = new StoriesAdapter(homeViewModel.stories, homeViewModel.argViewStories);
             recyclerView.setAdapter(adapter);
         }
         refreshArticles();
@@ -143,7 +147,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         long currentTime = System.currentTimeMillis();
         if(currentTime - homeViewModel.lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
             homeViewModel.lastIdsRefreshTime = currentTime;
-            homeViewModel.getStoriesIds().observe(this, new Observer<List<Long>>() {
+            homeViewModel.getStoriesIds().observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
                 @Override
                 public void onChanged(List<Long> ids) {
                     homeViewModel.storiesIds.clear();
@@ -174,5 +178,38 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                         adapter.notifyItemInserted(pos);
                 }
         });
+    }
+
+    public static void navigateToStory(NavController navController, int currentArgViewStory, Bundle args) {
+        if(currentArgViewStory < TOP_STORIES_VIEW || currentArgViewStory > JOB_STORIES_VIEW)
+            return;
+        if(currentArgViewStory == ASK_STORIES_VIEW || currentArgViewStory == JOB_STORIES_VIEW)
+            //Shouldn't open StoryFragment but only AskJobFragment
+            return;
+        int navId = 0;
+        switch (currentArgViewStory) {
+            case TOP_STORIES_VIEW: navId = R.id.action_nav_topstories_to_nav_story; break;
+            case BEST_STORIES_VIEW: navId = R.id.action_nav_beststories_to_nav_story; break;
+            case NEW_STORIES_VIEW: navId = R.id.action_nav_newstories_to_nav_story; break;
+            case SHOW_STORIES_VIEW: navId = R.id.action_nav_showstories_to_nav_story; break;
+        }
+        navController.navigate(navId, args);
+    }
+
+    public static void navigateToAskJob(NavController navController, int currentArgViewStory, Bundle args) {
+        if(currentArgViewStory < TOP_STORIES_VIEW || currentArgViewStory > JOB_STORIES_VIEW)
+            return;
+        if(currentArgViewStory == SHOW_STORIES_VIEW)
+            //Shouldn't open AskJobFragment
+            return;
+        int navId = 0;
+        switch (currentArgViewStory) {
+            case TOP_STORIES_VIEW: navId = R.id.action_nav_topstories_to_nav_ask; break;
+            case BEST_STORIES_VIEW: navId = R.id.action_nav_beststories_to_nav_ask; break;
+            case NEW_STORIES_VIEW: navId = R.id.action_nav_newstories_to_nav_ask; break;
+            case ASK_STORIES_VIEW: navId = R.id.action_nav_askstories_to_nav_ask; break;
+            case JOB_STORIES_VIEW: navId = R.id.action_nav_jobstories_to_nav_ask; break;
+        }
+        navController.navigate(navId, args);
     }
 }

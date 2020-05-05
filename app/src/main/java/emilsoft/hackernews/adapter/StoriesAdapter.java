@@ -30,18 +30,22 @@ import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentHomeArticlesListItemBinding;
 import emilsoft.hackernews.fragment.AskJobFragment;
+import emilsoft.hackernews.fragment.HomeFragment;
 import emilsoft.hackernews.fragment.StoryFragment;
+import emilsoft.hackernews.viewmodel.HomeViewModel;
 
 public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHolder> {
 
+    private int argViewStories;
     private List<? extends Item> stories;
     private Context context;
 
-    public StoriesAdapter(List<? extends Item> stories) {
+    public StoriesAdapter(List<? extends Item> stories, int argViewStories) {
         if (stories == null)
             this.stories = new ArrayList<>();
         else
             this.stories = stories;
+        this.argViewStories = argViewStories;
     }
 
     @NonNull
@@ -50,7 +54,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         return new ViewHolder(
                 FragmentHomeArticlesListItemBinding.inflate(
                     LayoutInflater.from(parent.getContext()), parent, false),
-                onStoryClickListener);
+                onStoryClickListener, argViewStories);
     }
 
     @Override
@@ -127,7 +131,8 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             args.putParcelable(AskJobFragment.ARG_ASK_JOB, askStory);
             args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
             args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, true);
-            navController.navigate(R.id.action_nav_home_to_nav_ask, args);
+            //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
+            HomeFragment.navigateToAskJob(navController, argViewStories, args);
         }
 
         @Override
@@ -137,7 +142,8 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             args.putParcelable(AskJobFragment.ARG_ASK_JOB, job);
             args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
             args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, false);
-            navController.navigate(R.id.action_nav_home_to_nav_ask, args);
+            //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
+            HomeFragment.navigateToAskJob(navController, argViewStories, args);
         }
     };
 
@@ -153,13 +159,15 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         final TextView mTime;
         final ImageView mJobIcon;
 
+        int argViewStories;
         Item mItem;
         private OnItemClickListener mListener;
 
-        ViewHolder(@NonNull FragmentHomeArticlesListItemBinding binding, OnItemClickListener listener) {
+        ViewHolder(@NonNull FragmentHomeArticlesListItemBinding binding, OnItemClickListener listener, int argViewStories) {
             super(binding.getRoot());
             mListener = listener;
             mBinding = binding;
+            this.argViewStories = argViewStories;
             mCommentsLayout = binding.articleCommentsLayout;
             mTitle = binding.articleTitle;
             mNumComments = binding.articleNumComments;
@@ -175,14 +183,20 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
                             args.putParcelable(AskJobFragment.ARG_ASK_JOB, mStory);
                             args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, false);
                             args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, true);
-                            navController.navigate(R.id.action_nav_home_to_nav_ask, args);
+                            //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
+                            HomeFragment.navigateToAskJob(navController, argViewStories, args);
                         } else {
                             args.putParcelable(StoryFragment.ARG_STORY, mStory);
-                            navController.navigate(R.id.action_nav_home_to_nav_story, args);
+                            //navController.navigate(R.id.action_nav_topstories_to_nav_story, args);
+                            HomeFragment.navigateToStory(navController, argViewStories, args);
                         }
                     } else if(mItem instanceof Job) {
                         Job mJob = (Job) mItem;
                         args.putParcelable(AskJobFragment.ARG_ASK_JOB, mJob);
+                        args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, false);
+                        args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, false);
+                        //navController.navigate(R.id.action_nav_newstories_to_nav_ask, args);
+                        HomeFragment.navigateToAskJob(navController, argViewStories, args);
                     }
                 }
             });
