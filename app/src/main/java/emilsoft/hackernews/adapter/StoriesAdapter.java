@@ -121,39 +121,6 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
     }
 
     private OnItemClickListener onStoryClickListener = new OnItemClickListener() {
-        @Override
-        public void onStoryClick(String url, long storyId) {
-            try {
-                WeakReference<Context> ref = new WeakReference<>(context);
-//                Utils.openWebUrl(ref, url);
-                String hackerNewsUrl = HackerNewsApi.HACKER_NEWS_BASE_URL + storyId;
-                CustomTabActivityHelper.openWebUrl(ref, url, hackerNewsUrl);
-            } catch (ActivityNotFoundException ex) {
-                Toast.makeText(context, "No Browser found to open link", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        public void onAskClick(View view, Story askStory) {
-            NavController navController = Navigation.findNavController(view);
-            Bundle args = new Bundle();
-            args.putParcelable(AskJobFragment.ARG_ASK_JOB, askStory);
-            args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
-            args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, true);
-            //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
-            HomeFragment.navigateToAskJob(navController, argViewStories, args);
-        }
-
-        @Override
-        public void onJobClick(View view, Job job) {
-            NavController navController = Navigation.findNavController(view);
-            Bundle args = new Bundle();
-            args.putParcelable(AskJobFragment.ARG_ASK_JOB, job);
-            args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
-            args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, false);
-            //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
-            HomeFragment.navigateToAskJob(navController, argViewStories, args);
-        }
 
         @Override
         public void onItemContentClick(View view, Item item) {
@@ -316,12 +283,6 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
     }
 
     private interface OnItemClickListener {
-
-        void onStoryClick(String url, long storyId);
-
-        void onAskClick(View view, Story askStory);
-
-        void onJobClick(View view, Job job);
 
         void onItemContentClick(View view, Item item);
 
