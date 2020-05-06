@@ -1,10 +1,13 @@
 package emilsoft.hackernews.fragment;
 
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
@@ -55,7 +58,6 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
         Bundle args = getArguments();
@@ -75,6 +77,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         swipeRefreshLayout.setOnRefreshListener(this);
         swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.redA200);
         recyclerView.addOnScrollListener(onScrollListener);
+//        registerForContextMenu(recyclerView);
         return binding.getRoot();
     }
 
@@ -106,6 +109,31 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             default: return super.onOptionsItemSelected(item);
         }
     }
+
+//    @Override
+//    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
+//        super.onCreateContextMenu(menu, v, menuInfo);
+//        if(getActivity() != null) {
+//            MenuInflater inflater = getActivity().getMenuInflater();
+//            inflater.inflate(R.menu.home_fragment_context_menu, menu);
+//        }
+//    }
+//
+//    @Override
+//    public boolean onContextItemSelected(@NonNull MenuItem item) {
+//        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+//        switch (item.getItemId()) {
+//            case R.id.home_fragment_context_item_menu_hackernews_link:
+//                return true;
+//            case R.id.home_fragment_context_item_menu_article_link:
+//                return true;
+//            case R.id.home_fragment_context_item_menu_article_comments:
+//                return true;
+//            case R.id.home_fragment_context_item_menu_article_share:
+//                return true;
+//            default: return super.onContextItemSelected(item);
+//        }
+//    }
 
     private RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener() {
 

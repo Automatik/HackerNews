@@ -81,8 +81,8 @@ public class CustomTabActivityHelper implements ServiceConnectionCallback {
 
         // Set custom back button
         // Can't use bitmapfactory with vector drawable
-//        intentBuilder.setCloseButtonIcon(BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_arrow_back_black_24dp));
-        Bitmap icon = Utils.getBitmapFromVectorDrawable(ctx, R.drawable.ic_arrow_back_black_24dp);
+//        intentBuilder.setCloseButtonIcon(BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_arrow_back_24dp));
+        Bitmap icon = Utils.getBitmapFromVectorDrawable(ctx, R.drawable.ic_arrow_back_24dp);
         if (icon != null)
             intentBuilder.setCloseButtonIcon(icon);
 

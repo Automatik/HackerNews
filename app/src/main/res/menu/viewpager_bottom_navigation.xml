@@ -4,11 +4,11 @@
     <item
         android:id="@+id/viewpager_bottom_nav_article"
         android:title="Article"
-        android:icon="@drawable/ic_web_white_24dp" />
+        android:icon="@drawable/ic_web_24dp" />
 
     <item
         android:id="@+id/viewpager_bottom_nav_comments"
         android:title="Comments"
-        android:icon="@drawable/ic_comment_white_24dp"/>
+        android:icon="@drawable/ic_comment_24dp"/>
 
 </menu>

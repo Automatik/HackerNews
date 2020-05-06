@@ -16,7 +16,7 @@
             android:title="@string/menu_newstories" />
         <item
             android:id="@+id/nav_beststories"
-            android:icon="@drawable/ic_thumb_up_white_24dp"
+            android:icon="@drawable/ic_thumb_up_24dp"
             android:iconTint="@color/black"
             android:title="@string/menu_beststories" />
         <item
