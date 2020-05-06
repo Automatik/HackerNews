@@ -194,4 +194,26 @@ public class CustomTabActivityHelper implements ServiceConnectionCallback {
         void onCustomTabsDisconnected();
     }
 
+    public interface LaunchUrlCallback {
+
+        /**
+         * Callback to use in Fragments to MainActivity to pre-fetch uri.
+         *
+         * mayLaunchURL() are very expensive in terms of battery/RAM/network, so it is throttled on
+         * app UID level. But limits get dropped after some time.
+         * Best strategy is to use mayLaunchURL() if the confidence that the user will navigate to
+         * the URL is very high.
+         * There is the "low confidence" mayLaunchURL() which is not throttled, but performs a more
+         * limited set of actions (currently preconnect, not specified which, may change). The
+         * low confidence mayLaunchURL is triggered by providing null as the uri and a list of URLs
+         * in otherLikelyBundles.
+         * @param priorUri most likely URL
+         * @param otherLikelyBundles Other likely destinations, sorted in decreasing likelihood
+         * order. Inside each Bundle, the client should provide a Uri using KEY_URL
+         * with putParcelable(String, android.os.Parcelable)
+         */
+        void onMayLaunchUrl(Uri priorUri, List<Bundle> otherLikelyBundles);
+
+    }
+
 }

@@ -1,5 +1,6 @@
 package emilsoft.hackernews.fragment;
 
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -25,6 +26,10 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.adapter.CommentsAdapter;
@@ -32,6 +37,7 @@ import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentAskstoryBinding;
 import emilsoft.hackernews.viewmodel.AskJobViewModel;
 
@@ -49,6 +55,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
     private TextView askJobText;
     private CommentsAdapter adapter;
     private AskJobViewModel askJobViewModel;
+    private CustomTabActivityHelper.LaunchUrlCallback launchUrlCallback;
 
     public static AskJobFragment newInstance(Item item, boolean isAskTextViewed, boolean isAsk) {
         Bundle args = new Bundle();
@@ -63,6 +70,7 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         askJobViewModel = new ViewModelProvider(this).get(AskJobViewModel.class);
 
         Bundle args = getArguments();
@@ -79,6 +87,17 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 askJobViewModel.askStory = null;
             }
             askJobViewModel.isAskTextViewed = args.getBoolean(ARG_VIEWING_ASK_JOB);
+        }
+        if(getActivity() instanceof CustomTabActivityHelper.LaunchUrlCallback)
+            launchUrlCallback = (CustomTabActivityHelper.LaunchUrlCallback) getActivity();
+        if(launchUrlCallback != null && askJobViewModel.isAsk && askJobViewModel.askStory != null) {
+                launchUrlCallback.onMayLaunchUrl(Uri.parse(Utils.toHackerNewsUrl(askJobViewModel.askStory.getId())), null);
+        }
+        if(launchUrlCallback != null && !askJobViewModel.isAsk && askJobViewModel.job != null) {
+            List<Uri> uris = new ArrayList<>(2);
+            uris.add(Uri.parse(askJobViewModel.job.getUrl()));
+            uris.add(Uri.parse(Utils.toHackerNewsUrl(askJobViewModel.job.getId())));
+            launchUrlCallback.onMayLaunchUrl(null, Utils.toCustomTabUriBundle(uris));
         }
     }
 
@@ -176,13 +195,38 @@ public class AskJobFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.fragment_item_menu, menu);
+        if(askJobViewModel.isAsk) {
+            MenuItem item = menu.findItem(R.id.action_item_menu_article_link);
+            item.setVisible(false);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
+        WeakReference<Context> ref = new WeakReference<>(getContext());
+        if(askJobViewModel.isAsk && askJobViewModel.askStory == null)
+            return super.onOptionsItemSelected(item);
+        if(!askJobViewModel.isAsk && askJobViewModel.job == null)
+            return super.onOptionsItemSelected(item);
+        String hnUrl;
+        if(askJobViewModel.isAsk)
+            hnUrl = Utils.toHackerNewsUrl(askJobViewModel.askStory.getId());
+        else
+            hnUrl = Utils.toHackerNewsUrl(askJobViewModel.job.getId());
         switch(id) {
-            case R.id.action_item_menu_refresh:
+            case R.id.action_item_menu_hackernews_link:
+                CustomTabActivityHelper.openWebUrl(ref, hnUrl);
+                return true;
+            case R.id.action_item_menu_article_link:
+                if(!askJobViewModel.isAsk) {
+                    String url = askJobViewModel.job.getUrl();
+                    CustomTabActivityHelper.openWebUrl(ref, url, hnUrl);
+                }
+                return true;
+            case R.id.action_item_menu_share:
+                return true;
+            case R.id.action_articles_refresh:
                 swipeRefreshLayout.setRefreshing(true);
                 observeItem(true);
                 return true;

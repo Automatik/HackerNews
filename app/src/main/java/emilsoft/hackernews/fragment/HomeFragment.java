@@ -1,5 +1,6 @@
 package emilsoft.hackernews.fragment;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -19,11 +20,14 @@ import androidx.navigation.NavController;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.adapter.StoriesAdapter;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.Type;
+import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentHomeBinding;
 import emilsoft.hackernews.viewmodel.HomeViewModel;
 import emilsoft.hackernews.R;
@@ -46,6 +50,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     private RecyclerView recyclerView;
     private StoriesAdapter adapter;
     private HomeViewModel homeViewModel;
+    private CustomTabActivityHelper.LaunchUrlCallback launchUrlCallback;
 
     public static HomeFragment newInstance(int argViewStories) {
         Bundle args = new Bundle();
@@ -67,6 +72,8 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             homeViewModel.argViewStories = args.getInt(ARG_VIEW_STORIES);
             homeViewModel.lastIdsRefreshTime = 0;
         }
+        if(getActivity() instanceof CustomTabActivityHelper.LaunchUrlCallback)
+            launchUrlCallback = (CustomTabActivityHelper.LaunchUrlCallback) getActivity();
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -129,7 +136,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
 //                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
                 homeViewModel.lastItemLoadedIndex += i - startIndex;
-
+                preFetchUrls(startIndex, homeViewModel.lastItemLoadedIndex);
             }
         }
 
@@ -163,6 +170,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                         observeItem(ids.get(i));
                     }
                     homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
+                    preFetchUrls(0, homeViewModel.lastItemLoadedIndex);
                     swipeRefreshLayout.setRefreshing(false);
                 }
             });
@@ -180,6 +188,24 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                         adapter.notifyItemInserted(pos);
                 }
         });
+    }
+
+    /**
+     * @param endIndex inclusive
+     */
+    private void preFetchUrls(int startIndex, int endIndex) {
+        if(endIndex <= startIndex || startIndex >= homeViewModel.stories.size() || endIndex >= homeViewModel.stories.size())
+            return;
+        List<Uri> uris = new ArrayList<>(endIndex - startIndex + 1);
+        for(int i = startIndex; i <= endIndex; i++) {
+            Item item = homeViewModel.stories.get(i);
+            if(item.getType() == Type.STORY_TYPE && item instanceof Story) {
+                Story story = (Story) item;
+                uris.add(Uri.parse(story.getUrl()));
+            }
+        }
+        if(launchUrlCallback != null)
+            launchUrlCallback.onMayLaunchUrl(null, Utils.toCustomTabUriBundle(uris));
     }
 
     public static void navigateToStory(NavController navController, int currentArgViewStory, Bundle args) {

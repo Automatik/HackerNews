@@ -1,11 +1,9 @@
 package emilsoft.hackernews.adapter;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,9 +14,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.view.SupportMenuInflater;
-import androidx.appcompat.view.menu.MenuBuilder;
-import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.GravityCompat;
@@ -41,7 +36,6 @@ import emilsoft.hackernews.databinding.FragmentHomeArticlesListItemBinding;
 import emilsoft.hackernews.fragment.AskJobFragment;
 import emilsoft.hackernews.fragment.HomeFragment;
 import emilsoft.hackernews.fragment.StoryFragment;
-import emilsoft.hackernews.viewmodel.HomeViewModel;
 
 public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHolder> {
 
@@ -141,7 +135,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
                             try {
                                 WeakReference<Context> ref = new WeakReference<>(context);
                                 // Utils.openWebUrl(ref, url);
-                                String hackerNewsUrl = HackerNewsApi.HACKER_NEWS_BASE_URL + mStory.getId();
+                                String hackerNewsUrl = Utils.toHackerNewsUrl(mStory.getId());
                                 CustomTabActivityHelper.openWebUrl(ref, mStory.getUrl(), hackerNewsUrl);
                             } catch (ActivityNotFoundException ex) {
                                 Toast.makeText(context, "No Browser found to open link", Toast.LENGTH_SHORT).show();
@@ -268,7 +262,7 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             PopupMenu popup = new PopupMenu(v.getContext(), v, GravityCompat.END);
             MenuInflater inflater = popup.getMenuInflater();
             popup.setOnMenuItemClickListener(this);
-            inflater.inflate(R.menu.home_fragment_context_menu, popup.getMenu());
+            inflater.inflate(R.menu.home_fragment_popup_menu, popup.getMenu());
             popup.show();
             return true; //consume event
         }

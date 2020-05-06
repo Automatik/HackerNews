@@ -6,27 +6,24 @@
         android:id="@+id/action_item_menu_hackernews_link"
         android:title="HackerNews Link"
         android:icon="@drawable/ic_web_asset_24dp"
-        android:orderInCategory="1"
+        app:iconTint="@color/black"
+        android:orderInCategory="2"
         app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/action_item_menu_article_link"
         android:title="Article Link"
         android:icon="@drawable/ic_web_24dp"
-        android:orderInCategory="2"
+        app:iconTint="@color/black"
+        android:orderInCategory="1"
         app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/action_item_menu_share"
         android:title="Share"
         android:icon="@drawable/ic_share_24dp"
+        app:iconTint="@color/black"
         android:orderInCategory="3"
         app:showAsAction="ifRoom"/>
-
-    <item
-        android:id="@+id/action_item_menu_refresh"
-        android:title="@string/menu_main_action_articles_refresh_title"
-        android:orderInCategory="4"
-        app:showAsAction="never"/>
 
 </menu>

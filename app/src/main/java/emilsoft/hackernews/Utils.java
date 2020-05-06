@@ -8,13 +8,21 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+import androidx.browser.customtabs.CustomTabsService;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import emilsoft.hackernews.api.HackerNewsApi;
 
 import static emilsoft.hackernews.MainActivity.TAG;
 
@@ -93,6 +101,29 @@ public class Utils {
         drawable.draw(canvas);
 
         return bitmap;
+    }
+
+    public static String toHackerNewsUrl(long itemId) {
+        return HackerNewsApi.HACKER_NEWS_BASE_URL + itemId;
+    }
+
+    public static List<Bundle> toCustomTabUriBundle(List<Uri> uris) {
+        return toCustomTabUriBundle(uris, 0);
+    }
+
+    public static List<Bundle> toCustomTabUriBundle(List<Uri> uris, int startIndex) {
+        if(uris == null || uris.size() == 0 || startIndex < 0 || startIndex >= uris.size())
+            return Collections.emptyList();
+        List<Bundle> uriBundles = new ArrayList<>(uris.size());
+        for(int i = startIndex; i < uris.size(); i++) {
+            Uri uri = uris.get(i);
+            if(uri != null) {
+                Bundle bundle = new Bundle();
+                bundle.putParcelable(CustomTabsService.KEY_URL, uri);
+                uriBundles.add(bundle);
+            }
+        }
+        return uriBundles;
     }
 
 }

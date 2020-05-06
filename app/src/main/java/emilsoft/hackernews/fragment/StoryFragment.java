@@ -1,6 +1,7 @@
 package emilsoft.hackernews.fragment;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,9 +25,14 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+
 import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentStoryBinding;
 import emilsoft.hackernews.viewmodel.StoryViewModel;
 
@@ -44,6 +50,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
     private CommentsAdapter adapter;
+    private CustomTabActivityHelper.LaunchUrlCallback launchUrlCallback;
 
     private StoryViewModel storyViewModel;
 
@@ -59,6 +66,7 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         storyViewModel = new ViewModelProvider(this).get(StoryViewModel.class);
 
         Bundle args = getArguments();
@@ -81,6 +89,15 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             storyViewModel.mPoints = 0;
             storyViewModel.mNumComments = 0;
             storyViewModel.mTime = 0;
+        }
+
+        if(getActivity() instanceof CustomTabActivityHelper.LaunchUrlCallback)
+            launchUrlCallback = (CustomTabActivityHelper.LaunchUrlCallback) getActivity();
+        if(launchUrlCallback != null && storyViewModel.mStory != null) {
+            List<Uri> uris = new ArrayList<>(2);
+            uris.add(Uri.parse(storyViewModel.mStory.getUrl()));
+            uris.add(Uri.parse(Utils.toHackerNewsUrl(storyViewModel.mStory.getId())));
+            launchUrlCallback.onMayLaunchUrl(null, Utils.toCustomTabUriBundle(uris));
         }
     }
 
@@ -134,8 +151,21 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
+        WeakReference<Context> ref = new WeakReference<>(getContext());
+        if(storyViewModel.mStory == null)
+            return super.onOptionsItemSelected(item);
+        String hnUrl = Utils.toHackerNewsUrl(storyViewModel.mStory.getId());
         switch (id) {
-            case R.id.action_item_menu_refresh:
+            case R.id.action_item_menu_hackernews_link:
+                CustomTabActivityHelper.openWebUrl(ref, hnUrl);
+                return true;
+            case R.id.action_item_menu_article_link:
+                CustomTabActivityHelper.openWebUrl(ref, storyViewModel.mStory.getUrl(), hnUrl);
+                return true;
+            case R.id.action_item_menu_share:
+                //TODO Implement share
+                return true;
+            case R.id.action_articles_refresh:
                 swipeRefreshLayout.setRefreshing(true);
                 observeStory(true);
                 return true;

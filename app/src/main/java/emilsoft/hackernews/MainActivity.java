@@ -1,6 +1,7 @@
 package emilsoft.hackernews;
 
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -25,11 +26,13 @@ import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.List;
+
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.ActivityMainBinding;
 import emilsoft.hackernews.fragment.HomeFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements CustomTabActivityHelper.LaunchUrlCallback{
 
     private AppBarConfiguration mAppBarConfiguration;
     private CustomTabActivityHelper customTabActivityHelper;
@@ -93,4 +96,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onMayLaunchUrl(Uri priorUri, List<Bundle> otherLikelyBundles) {
+        if(customTabActivityHelper != null) {
+            customTabActivityHelper.mayLaunchUrl(priorUri, null, otherLikelyBundles);
+        }
+    }
 }
