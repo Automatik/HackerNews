@@ -3,6 +3,7 @@ package emilsoft.hackernews.fragment;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -27,8 +28,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
+import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Story;
@@ -218,8 +223,21 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         storyViewModel.mComments = story.getKids();
         if(storyViewModel.mComments == null)
             storyViewModel.mComments = new long[0];
-        for(long idComment : storyViewModel.mComments) {
-            observeComment(idComment);
+//        storyViewModel.start1 = System.currentTimeMillis();
+//        for(long idComment : storyViewModel.mComments) {
+//            observeComment(idComment);
+//        }
+//        storyViewModel.start2 = System.currentTimeMillis();
+        if(storyViewModel.mComments.length > 0) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                observeComments(LongStream.of(storyViewModel.mComments).boxed().collect(Collectors.toList()));
+            else {
+                List<Long> ids = new ArrayList<>(storyViewModel.mComments.length);
+                for(long id : storyViewModel.mComments)
+                    ids.add(id);
+                observeComments(ids);
+            }
+
         }
         if(swipeRefreshLayout != null)
             swipeRefreshLayout.setRefreshing(false);
@@ -253,6 +271,53 @@ public class StoryFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                 if(kids != null)
                     for(long idComment : kids)
                         observeComment(idComment);
+//                storyViewModel.stop1 = System.currentTimeMillis();
+//                Log.v(MainActivity.TAG, "getComment: " + (((storyViewModel.stop1-storyViewModel.start1)/(double)1000000))+ " ms");
+            }
+        });
+    }
+
+    private void observeComments(List<Long> ids) {
+        storyViewModel.getComments(ids).observe(this, new Observer<List<Comment>>() {
+            @Override
+            public void onChanged(List<Comment> comments) {
+                List<Long> newKidsIds = new ArrayList<>();
+                for(Comment comment : comments) {
+                    if(!storyViewModel.commentsList.contains(comment)) {
+                        int pos = storyViewModel.commentsList.size();
+                        long idParent = comment.getParent();
+                        if (idParent == storyViewModel.mStoryId) {
+                            comment.setLevel(1);
+                            storyViewModel.commentsList.add(comment);
+                            if (adapter != null)
+                                adapter.notifyItemInserted(pos);
+                        } else {
+                            Comment parent = new Comment(idParent);
+                            int index = storyViewModel.commentsList.indexOf(parent);
+                            parent = storyViewModel.commentsList.get(index);
+                            comment.setLevel(parent.getLevel() + 1);
+                            index += 1; //+1 after the parent
+                            storyViewModel.commentsList.add(index, comment);
+                            if (adapter != null)
+                                adapter.notifyItemInserted(index);
+                        }
+                    }
+                    long[] kids = comment.getKids();
+                    if(kids != null) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+                        } else {
+                            List<Long> temp = new ArrayList<>(kids.length);
+                            for(long id : kids)
+                                temp.add(id);
+                            newKidsIds.addAll(temp);
+                        }
+                    }
+                }
+                if(newKidsIds.size() > 0)
+                    observeComments(newKidsIds);
+//                storyViewModel.stop2 = System.currentTimeMillis();
+//                Log.v(MainActivity.TAG, "getCommentss: " + (((storyViewModel.stop2-storyViewModel.start2)/(double)1000000))+ " ms");
             }
         });
     }

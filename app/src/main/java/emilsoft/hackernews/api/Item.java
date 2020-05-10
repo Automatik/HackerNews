@@ -4,6 +4,8 @@ import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Objects;
@@ -133,5 +135,11 @@ public class Item implements Parcelable {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "Item Id: " + id + " by " + user;
     }
 }

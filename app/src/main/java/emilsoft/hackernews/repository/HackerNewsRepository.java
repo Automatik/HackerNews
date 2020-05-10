@@ -5,25 +5,23 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
-
+import java.util.ArrayList;
 import java.util.List;
 
-import emilsoft.hackernews.api.Ask;
+import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.HackerNewsApi;
+import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-
-
-import static emilsoft.hackernews.MainActivity.TAG;
 
 public class HackerNewsRepository {
 
@@ -41,30 +39,30 @@ public class HackerNewsRepository {
     }
 
     public LiveData<List<Long>> getTopStoriesIds() {
-        return getStories(hackerNewsApi.getTopStories());
+        return getStoriesIds(hackerNewsApi.getTopStories());
     }
 
     public LiveData<List<Long>> getNewStoriesIds() {
-        return getStories(hackerNewsApi.getNewStories());
+        return getStoriesIds(hackerNewsApi.getNewStories());
     }
 
     public LiveData<List<Long>> getBestStoriesIds() {
-        return getStories(hackerNewsApi.getBestStories());
+        return getStoriesIds(hackerNewsApi.getBestStories());
     }
 
     public LiveData<List<Long>> getAskStoriesIds() {
-        return getStories(hackerNewsApi.getAskStories());
+        return getStoriesIds(hackerNewsApi.getAskStories());
     }
 
     public LiveData<List<Long>> getShowStoriesIds() {
-        return getStories(hackerNewsApi.getShowStories());
+        return getStoriesIds(hackerNewsApi.getShowStories());
     }
 
     public LiveData<List<Long>> getJobStoriesIds() {
-        return getStories(hackerNewsApi.getJobStories());
+        return getStoriesIds(hackerNewsApi.getJobStories());
     }
 
-    private LiveData<List<Long>> getStories(Observable<List<Long>> observable) {
+    private LiveData<List<Long>> getStoriesIds(Observable<List<Long>> observable) {
         final MutableLiveData<List<Long>> data = new MutableLiveData<>();
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -115,6 +113,94 @@ public class HackerNewsRepository {
                     @Override
                     public void onNext(Story story) {
                         data.setValue(story);
+                    }
+                });
+        return data;
+    }
+
+    public LiveData<List<Story>> getStories(List<Long> ids) {
+        final MutableLiveData<List<Story>> data = new MutableLiveData<>();
+        List<Observable<Story>> observables = new ArrayList<>(ids.size());
+        for (Long id : ids)
+//            observables.add(Observable.defer(() -> hackerNewsApi.getStory(id)));
+            observables.add(hackerNewsApi.getStory(id).subscribeOn(Schedulers.io()));
+        Observable<List<Story>> observable = Observable.zip(observables, new Function<Object[], List<Story>>() {
+            @Override
+            public List<Story> apply(Object[] stories) throws Exception {
+                List<Story> list = new ArrayList<>(stories.length);
+                for(Object s : stories)
+                    list.add((Story) s);
+                return list;
+            }
+        });
+        observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Story>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(List<Story> stories) {
+                        data.setValue(stories);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+        return data;
+    }
+
+    public LiveData<List<? extends Item>> getItems(List<Long> ids) {
+        final MutableLiveData<List<? extends Item>> data = new MutableLiveData<>();
+        List<Observable<? extends Item>> observables = new ArrayList<>(ids.size());
+        for (Long id : ids) {
+            observables.add(hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()));
+        }
+        Observable<List<? extends Item>> observable = Observable.zip(observables, new Function<Object[], List<? extends Item>>() {
+            @Override
+            public List<? extends Item> apply(Object[] items) throws Exception {
+                List<Item> list = new ArrayList<>(items.length);
+                for(Object i : items) {
+                    Item item = (Item) i;
+                    switch (item.getType()) {
+                        case JOB_TYPE: list.add((Job) i); break;
+                        case STORY_TYPE:
+                        default: list.add((Story) i);
+                    }
+                }
+                return list;
+            }
+        });
+        observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<? extends Item>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(List<? extends Item> items) {
+                        data.setValue(items);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
                     }
                 });
         return data;
@@ -177,6 +263,47 @@ public class HackerNewsRepository {
                     }
                 });
 
+        return data;
+    }
+
+    public LiveData<List<Comment>> getComments(List<Long> ids) {
+        final MutableLiveData<List<Comment>> data = new MutableLiveData<>();
+        List<Observable<Comment>> observables = new ArrayList<>(ids.size());
+        for (Long id : ids) {
+            observables.add(hackerNewsApi.getComment(id).subscribeOn(Schedulers.io()));
+        }
+        Observable<List<Comment>> observable = Observable.zip(observables, new Function<Object[], List<Comment>>() {
+            @Override
+            public List<Comment> apply(Object[] objects) throws Exception {
+                List<Comment> list = new ArrayList<>(objects.length);
+                for(Object o : objects)
+                    list.add((Comment) o);
+                return list;
+            }
+        });
+        observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Comment>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(List<Comment> comments) {
+                        data.setValue(comments);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
         return data;
     }
 

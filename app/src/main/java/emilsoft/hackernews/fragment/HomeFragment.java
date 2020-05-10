@@ -2,20 +2,16 @@ package emilsoft.hackernews.fragment;
 
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -69,7 +65,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         if(savedInstanceState != null)
             args = savedInstanceState;
         if(args != null) {
-            homeViewModel.argViewStories = args.getInt(ARG_VIEW_STORIES);
+            homeViewModel.argViewItems = args.getInt(ARG_VIEW_STORIES);
             homeViewModel.lastIdsRefreshTime = 0;
         }
         if(getActivity() instanceof CustomTabActivityHelper.LaunchUrlCallback)
@@ -90,8 +86,8 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if(homeViewModel.stories != null) {
-            adapter = new StoriesAdapter(homeViewModel.stories, homeViewModel.argViewStories);
+        if(homeViewModel.items != null) {
+            adapter = new StoriesAdapter(homeViewModel.items, homeViewModel.argViewItems);
             recyclerView.setAdapter(adapter);
         }
         refreshArticles();
@@ -100,7 +96,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(ARG_VIEW_STORIES, homeViewModel.argViewStories);
+        outState.putInt(ARG_VIEW_STORIES, homeViewModel.argViewItems);
     }
 
     @Override
@@ -123,19 +119,23 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
             super.onScrollStateChanged(recyclerView, newState);
-            int numIds = homeViewModel.storiesIds.size();
+            int numIds = homeViewModel.itemsIds.size();
             if(newState == RecyclerView.SCROLL_STATE_IDLE && scrollY > 0 && numIds > 0) {
                 //The RecyclerView is not currently scrolling.
                 int startIndex = homeViewModel.lastItemLoadedIndex + 1;
                 int i = startIndex;
 
                 //First condition to check if the user finished to load the 500 top stories ids
-                while (i < homeViewModel.storiesIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
-                    observeItem(homeViewModel.storiesIds.get(i));
-                    i++;
-                }
+//                while (i < homeViewModel.itemsIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
+//                    observeItem(homeViewModel.itemsIds.get(i));
+//                    i++;
+//                }
+                int endIndex = Math.min(startIndex + NUM_LOAD_ITEMS, homeViewModel.itemsIds.size());
+                observeItems(homeViewModel.itemsIds.subList(startIndex, endIndex));
+
 //                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
-                homeViewModel.lastItemLoadedIndex += i - startIndex;
+//                homeViewModel.lastItemLoadedIndex += i - startIndex; era giusto sottrarre stardINdex??
+                homeViewModel.lastItemLoadedIndex += endIndex - 1;
                 preFetchUrls(startIndex, homeViewModel.lastItemLoadedIndex);
             }
         }
@@ -156,19 +156,21 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         long currentTime = System.currentTimeMillis();
         if(currentTime - homeViewModel.lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
             homeViewModel.lastIdsRefreshTime = currentTime;
-            homeViewModel.getStoriesIds().observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
+            homeViewModel.getItemsIds().observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
                 @Override
                 public void onChanged(List<Long> ids) {
-                    homeViewModel.storiesIds.clear();
-                    int size = homeViewModel.stories.size();
-                    homeViewModel.stories.clear();
+                    homeViewModel.itemsIds.clear();
+                    int size = homeViewModel.items.size();
+                    homeViewModel.items.clear();
                     if (adapter != null)
                         adapter.notifyItemRangeRemoved(0, size);
-                    homeViewModel.storiesIds.addAll(ids);
+                    homeViewModel.itemsIds.addAll(ids);
                     homeViewModel.lastItemLoadedIndex = 0;
-                    for (int i = 0; i < NUM_LOAD_ITEMS; i++) {
-                        observeItem(ids.get(i));
-                    }
+                    //homeViewModel.start1 = System.nanoTime();
+                    //for (int i = 0; i < NUM_LOAD_ITEMS; i++) {
+                    //    observeItem(ids.get(i));
+                    //}
+                    observeItems(ids.subList(0, NUM_LOAD_ITEMS));
                     homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
                     preFetchUrls(0, homeViewModel.lastItemLoadedIndex);
                     swipeRefreshLayout.setRefreshing(false);
@@ -181,24 +183,42 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private void observeItem(long id) {
         homeViewModel.getItem(id).observe(this, (item) -> {
-                if(!homeViewModel.stories.contains(item)) {
-                    int pos = homeViewModel.stories.size();
-                    homeViewModel.stories.add(item);
+                if(!homeViewModel.items.contains(item)) {
+                    int pos = homeViewModel.items.size();
+                    homeViewModel.items.add(item);
                     if (adapter != null)
                         adapter.notifyItemInserted(pos);
                 }
+                //homeViewModel.stop1 = System.nanoTime();
+                //Log.v(MainActivity.TAG, "getStory: " + (((homeViewModel.stop1-homeViewModel.start1)/(double)1000000))+ " ms");
         });
+    }
+
+    private void observeItems(List<Long> ids) {
+        //homeViewModel.start2 = System.nanoTime();
+        homeViewModel.getItems(ids).observe(this, (items -> {
+            for(Item item : items) {
+                if(!homeViewModel.items.contains(item)) {
+                    int pos = homeViewModel.items.size();
+                    homeViewModel.items.add(item);
+                    if(adapter != null)
+                        adapter.notifyItemInserted(pos);
+                }
+            }
+            //homeViewModel.stop2 = System.nanoTime();
+            //Log.v(MainActivity.TAG, "getStories: " + (((homeViewModel.stop2-homeViewModel.start2)/(double)1000000))+ " ms");
+        }));
     }
 
     /**
      * @param endIndex inclusive
      */
     private void preFetchUrls(int startIndex, int endIndex) {
-        if(endIndex <= startIndex || startIndex >= homeViewModel.stories.size() || endIndex >= homeViewModel.stories.size())
+        if(endIndex <= startIndex || startIndex >= homeViewModel.items.size() || endIndex >= homeViewModel.items.size())
             return;
         List<Uri> uris = new ArrayList<>(endIndex - startIndex + 1);
         for(int i = startIndex; i <= endIndex; i++) {
-            Item item = homeViewModel.stories.get(i);
+            Item item = homeViewModel.items.get(i);
             if(item.getType() == Type.STORY_TYPE && item instanceof Story) {
                 Story story = (Story) item;
                 uris.add(Uri.parse(story.getUrl()));

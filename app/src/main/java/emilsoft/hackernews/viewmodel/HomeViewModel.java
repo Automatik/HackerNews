@@ -14,21 +14,25 @@ import java.util.List;
 
 public class HomeViewModel extends ViewModel {
 
-    public List<Long> storiesIds;
-    public List<Item> stories;
+    public List<Long> itemsIds;
+    public List<Item> items;
     private HackerNewsRepository repository;
-    public int argViewStories;
+    public int argViewItems;
     public int lastItemLoadedIndex;
     public long lastIdsRefreshTime = 0L;
 
+    public long start1 = 0L;
+    public long stop1 = 0L;
+    public long start2=0L, stop2 = 0L;
+
     public HomeViewModel() {
         repository = HackerNewsRepository.getInstance();
-        storiesIds = new ArrayList<>();
-        stories = new ArrayList<>();
+        itemsIds = new ArrayList<>();
+        items = new ArrayList<>();
     }
 
-    public LiveData<List<Long>> getStoriesIds() {
-        switch (argViewStories) {
+    public LiveData<List<Long>> getItemsIds() {
+        switch (argViewItems) {
             case HomeFragment.BEST_STORIES_VIEW:
                 return repository.getBestStoriesIds();
             case HomeFragment.NEW_STORIES_VIEW:
@@ -45,10 +49,14 @@ public class HomeViewModel extends ViewModel {
     }
 
     public LiveData<? extends Item> getItem(long id) {
-        if(argViewStories == HomeFragment.JOB_STORIES_VIEW)
+        if(argViewItems == HomeFragment.JOB_STORIES_VIEW)
             return getJob(id);
         else
             return getStory(id);
+    }
+
+    public LiveData<List<? extends Item>> getItems(List<Long> ids) {
+        return repository.getItems(ids);
     }
 
     private LiveData<Story> getStory(long id) {
@@ -57,6 +65,10 @@ public class HomeViewModel extends ViewModel {
 
     private LiveData<Job> getJob(long id) {
         return repository.getJob(id);
+    }
+
+    public LiveData<List<Story>> getStories(List<Long> ids) {
+        return repository.getStories(ids);
     }
 
 }

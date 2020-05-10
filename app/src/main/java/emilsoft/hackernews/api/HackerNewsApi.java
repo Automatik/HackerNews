@@ -41,4 +41,7 @@ public interface HackerNewsApi {
     @GET("item/{id}.json")
     Observable<Comment> getComment(@Path("id") long id);
 
+    @GET("item/{id}.json")
+    Observable<Item> getItem(@Path("id") long id);
+
 }
