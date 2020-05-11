@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_nav_topstories_to_nav_ask"
             app:destination="@id/nav_ask" />
+        <action
+            android:id="@+id/action_nav_topstories_to_nav_job"
+            app:destination="@id/nav_job" />
         <argument
             android:name="arg_view_stories"
             app:argType="integer"
@@ -33,13 +36,19 @@
         android:id="@+id/nav_story"
         android:name="emilsoft.hackernews.fragment.StoryFragment"
         android:label="Story"
-        tools:layout="@layout/fragment_story" />
+        tools:layout="@layout/fragment_item" />
 
     <fragment
         android:id="@+id/nav_ask"
-        android:name="emilsoft.hackernews.fragment.AskJobFragment"
+        android:name="emilsoft.hackernews.fragment.AskFragment"
         android:label="Ask"
-        tools:layout="@layout/fragment_askstory" />
+        tools:layout="@layout/fragment_item" />
+
+    <fragment
+        android:id="@+id/nav_job"
+        android:name="emilsoft.hackernews.fragment.JobFragment"
+        android:label="Job"
+        tools:layout="@layout/fragment_item"/>
 
     <fragment
         android:id="@+id/nav_newstories"
@@ -52,6 +61,9 @@
         <action
             android:id="@+id/action_nav_newstories_to_nav_ask"
             app:destination="@id/nav_ask" />
+        <action
+            android:id="@+id/action_nav_newstories_to_nav_job"
+            app:destination="@id/nav_job" />
         <argument
             android:name="arg_view_stories"
             app:argType="integer"
@@ -69,6 +81,9 @@
         <action
             android:id="@+id/action_nav_beststories_to_nav_ask"
             app:destination="@id/nav_ask" />
+        <action
+            android:id="@+id/action_nav_beststories_to_nav_job"
+            app:destination="@id/nav_job" />
         <argument
             android:name="arg_view_stories"
             app:argType="integer"
@@ -109,8 +124,8 @@
         android:label="@string/menu_jobstories"
         tools:layout="@layout/fragment_home" >
         <action
-            android:id="@+id/action_nav_jobstories_to_nav_ask"
-            app:destination="@id/nav_ask" />
+            android:id="@+id/action_nav_jobstories_to_nav_job"
+            app:destination="@id/nav_job" />
         <argument
             android:name="arg_view_stories"
             app:argType="integer"

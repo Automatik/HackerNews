@@ -99,7 +99,7 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onError(Throwable e) {
-                        e.printStackTrace();
+                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                     }
 
                     @Override
@@ -151,6 +151,35 @@ public class HackerNewsRepository {
                     @Override
                     public void onError(Throwable e) {
 
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+        return data;
+    }
+
+    public LiveData<? extends Item> getItem(long id) {
+        final MutableLiveData<Item> data = new MutableLiveData<>();
+        hackerNewsApi.getItem(id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Item>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Item item) {
+                        data.setValue(item);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                     }
 
                     @Override

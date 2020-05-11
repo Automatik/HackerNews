@@ -3,7 +3,7 @@ package emilsoft.hackernews.api;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class Ask extends Item {
+public class Ask extends Story {
 
     public static final Parcelable.Creator<Ask> CREATOR = new Parcelable.Creator<Ask>() {
 
@@ -22,13 +22,6 @@ public class Ask extends Item {
 
     public Ask(Parcel in) {
         super(in);
-        this.descendants = in.readInt();
-        this.kids = new long[in.readInt()];
-        in.readLongArray(kids);
-        this.score = in.readInt();
-        this.text = in.readString();
-        this.title = in.readString();
-        this.url = in.readString();
     }
 
     /**

@@ -38,7 +38,7 @@ public class ItemFragment extends Fragment {
         setHasOptionsMenu(true);
         Bundle args = getArguments();
         if(args != null)
-            story = args.getParcelable(StoryFragment.ARG_STORY);
+            story = args.getParcelable(StoryFragment.ARG_ITEM);
     }
 
     @Nullable

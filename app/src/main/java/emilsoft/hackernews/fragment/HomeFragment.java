@@ -123,7 +123,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             if(newState == RecyclerView.SCROLL_STATE_IDLE && scrollY > 0 && numIds > 0) {
                 //The RecyclerView is not currently scrolling.
                 int startIndex = homeViewModel.lastItemLoadedIndex + 1;
-                int i = startIndex;
+//                int i = startIndex;
 
                 //First condition to check if the user finished to load the 500 top stories ids
 //                while (i < homeViewModel.itemsIds.size() && i < startIndex + NUM_LOAD_ITEMS) {
@@ -133,9 +133,8 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 int endIndex = Math.min(startIndex + NUM_LOAD_ITEMS, homeViewModel.itemsIds.size());
                 observeItems(homeViewModel.itemsIds.subList(startIndex, endIndex));
 
-//                homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
-//                homeViewModel.lastItemLoadedIndex += i - startIndex; era giusto sottrarre stardINdex??
-                homeViewModel.lastItemLoadedIndex += endIndex - 1;
+//                homeViewModel.lastItemLoadedIndex += i - startIndex;
+                homeViewModel.lastItemLoadedIndex = endIndex - 1;
                 preFetchUrls(startIndex, homeViewModel.lastItemLoadedIndex);
             }
         }
@@ -229,34 +228,37 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     public static void navigateToStory(NavController navController, int currentArgViewStory, Bundle args) {
-        if(currentArgViewStory < TOP_STORIES_VIEW || currentArgViewStory > JOB_STORIES_VIEW)
-            return;
-        if(currentArgViewStory == ASK_STORIES_VIEW || currentArgViewStory == JOB_STORIES_VIEW)
-            //Shouldn't open StoryFragment but only AskJobFragment
-            return;
         int navId = 0;
         switch (currentArgViewStory) {
             case TOP_STORIES_VIEW: navId = R.id.action_nav_topstories_to_nav_story; break;
             case BEST_STORIES_VIEW: navId = R.id.action_nav_beststories_to_nav_story; break;
             case NEW_STORIES_VIEW: navId = R.id.action_nav_newstories_to_nav_story; break;
             case SHOW_STORIES_VIEW: navId = R.id.action_nav_showstories_to_nav_story; break;
+            default: return;
         }
         navController.navigate(navId, args);
     }
 
-    public static void navigateToAskJob(NavController navController, int currentArgViewStory, Bundle args) {
-        if(currentArgViewStory < TOP_STORIES_VIEW || currentArgViewStory > JOB_STORIES_VIEW)
-            return;
-        if(currentArgViewStory == SHOW_STORIES_VIEW)
-            //Shouldn't open AskJobFragment
-            return;
+    public static void navigateToAsk(NavController navController, int currentArgViewStory, Bundle args) {
         int navId = 0;
         switch (currentArgViewStory) {
             case TOP_STORIES_VIEW: navId = R.id.action_nav_topstories_to_nav_ask; break;
             case BEST_STORIES_VIEW: navId = R.id.action_nav_beststories_to_nav_ask; break;
             case NEW_STORIES_VIEW: navId = R.id.action_nav_newstories_to_nav_ask; break;
             case ASK_STORIES_VIEW: navId = R.id.action_nav_askstories_to_nav_ask; break;
-            case JOB_STORIES_VIEW: navId = R.id.action_nav_jobstories_to_nav_ask; break;
+            default: return;
+        }
+        navController.navigate(navId, args);
+    }
+
+    public static void navigateToJob(NavController navController, int currentArgViewStory, Bundle args) {
+        int navId = 0;
+        switch (currentArgViewStory) {
+            case TOP_STORIES_VIEW: navId = R.id.action_nav_topstories_to_nav_job; break;
+            case BEST_STORIES_VIEW: navId = R.id.action_nav_beststories_to_nav_job; break;
+            case NEW_STORIES_VIEW: navId = R.id.action_nav_newstories_to_nav_job; break;
+            case JOB_STORIES_VIEW: navId = R.id.action_nav_jobstories_to_nav_job; break;
+            default: return;
         }
         navController.navigate(navId, args);
     }

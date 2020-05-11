@@ -72,4 +72,8 @@ public class Job extends Item {
         dest.writeString(title);
         dest.writeString(url);
     }
+
+    public boolean hasJobUrl() {
+        return url != null && !url.isEmpty();
+    }
 }

@@ -33,8 +33,11 @@ import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentHomeArticlesListItemBinding;
+import emilsoft.hackernews.fragment.AskFragment;
 import emilsoft.hackernews.fragment.AskJobFragment;
+import emilsoft.hackernews.fragment.BaseItemFragment;
 import emilsoft.hackernews.fragment.HomeFragment;
+import emilsoft.hackernews.fragment.JobFragment;
 import emilsoft.hackernews.fragment.StoryFragment;
 
 public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHolder> {
@@ -125,37 +128,33 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
                         if(Story.isAsk(mStory)) {
                             NavController navController = Navigation.findNavController(view);
                             Bundle args = new Bundle();
-                            args.putParcelable(AskJobFragment.ARG_ASK_JOB, mStory);
-                            args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
-                            args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, true);
+                            args.putParcelable(AskFragment.ARG_ITEM, mStory);
+                            args.putBoolean(AskFragment.ARG_VIEWING_ASK, true);
                             //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
-                            HomeFragment.navigateToAskJob(navController, argViewStories, args);
+                            HomeFragment.navigateToAsk(navController, argViewStories, args);
                         }
                         else {
-                            try {
-                                WeakReference<Context> ref = new WeakReference<>(context);
-                                // Utils.openWebUrl(ref, url);
-                                String hackerNewsUrl = Utils.toHackerNewsUrl(mStory.getId());
-                                CustomTabActivityHelper.openWebUrl(ref, mStory.getUrl(), hackerNewsUrl);
-                            } catch (ActivityNotFoundException ex) {
-                                Toast.makeText(context, "No Browser found to open link", Toast.LENGTH_SHORT).show();
-                            }
+                            openWebUrl(mStory.getId(), mStory.getUrl());
                         }
                     }
                     break;
                 case JOB_TYPE:
                     if(item instanceof Job) {
                         Job mJob = (Job) item;
-                        NavController navController = Navigation.findNavController(view);
-                        Bundle args = new Bundle();
-                        args.putParcelable(AskJobFragment.ARG_ASK_JOB, mJob);
-                        args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, true);
-                        args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, false);
-                        //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
-                        HomeFragment.navigateToAskJob(navController, argViewStories, args);
+                        if(mJob.hasJobUrl()) {
+                            openWebUrl(mJob.getId(), mJob.getUrl());
+                        } else {
+                            NavController navController = Navigation.findNavController(view);
+                            Bundle args = new Bundle();
+                            args.putParcelable(JobFragment.ARG_ITEM, mJob);
+                            args.putBoolean(JobFragment.ARG_VIEWING_JOB, true);
+                            //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
+                            HomeFragment.navigateToJob(navController, argViewStories, args);
+                        }
                     }
                     break;
                 case POLL_TYPE:
+                case POLLOPT_TYPE:
                 default: break;
             }
         }
@@ -168,23 +167,21 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
             if(item instanceof Story) {
                 Story mStory = (Story) item;
                 if (Story.isAsk(mStory)) {
-                    args.putParcelable(AskJobFragment.ARG_ASK_JOB, mStory);
-                    args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, false);
-                    args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, true);
+                    args.putParcelable(AskFragment.ARG_ITEM, mStory);
+                    args.putBoolean(AskFragment.ARG_VIEWING_ASK, false);
                     //navController.navigate(R.id.action_nav_topstories_to_nav_ask, args);
-                    HomeFragment.navigateToAskJob(navController, argViewStories, args);
+                    HomeFragment.navigateToAsk(navController, argViewStories, args);
                 } else {
-                    args.putParcelable(StoryFragment.ARG_STORY, mStory);
+                    args.putParcelable(StoryFragment.ARG_ITEM, mStory);
                     //navController.navigate(R.id.action_nav_topstories_to_nav_story, args);
                     HomeFragment.navigateToStory(navController, argViewStories, args);
                 }
             } else if(item instanceof Job) {
                 Job mJob = (Job) item;
-                args.putParcelable(AskJobFragment.ARG_ASK_JOB, mJob);
-                args.putBoolean(AskJobFragment.ARG_VIEWING_ASK_JOB, false);
-                args.putBoolean(AskJobFragment.ARG_IS_ASK_OR_JOB, false);
+                args.putParcelable(JobFragment.ARG_ITEM, mJob);
+                args.putBoolean(JobFragment.ARG_VIEWING_JOB, false);
                 //navController.navigate(R.id.action_nav_newstories_to_nav_ask, args);
-                HomeFragment.navigateToAskJob(navController, argViewStories, args);
+                HomeFragment.navigateToJob(navController, argViewStories, args);
             }
         }
 
@@ -209,6 +206,17 @@ public class StoriesAdapter extends RecyclerView.Adapter<StoriesAdapter.ViewHold
         }
 
     };
+
+    private void openWebUrl(long id, String url) {
+        try {
+            WeakReference<Context> ref = new WeakReference<>(context);
+            // Utils.openWebUrl(ref, url);
+            String hackerNewsUrl = Utils.toHackerNewsUrl(id);
+            CustomTabActivityHelper.openWebUrl(ref, url, hackerNewsUrl);
+        } catch (ActivityNotFoundException ex) {
+            Toast.makeText(context, "No Browser found to open link", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
             View.OnLongClickListener, PopupMenu.OnMenuItemClickListener{
