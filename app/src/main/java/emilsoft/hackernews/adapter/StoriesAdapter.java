@@ -34,8 +34,6 @@ import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentHomeArticlesListItemBinding;
 import emilsoft.hackernews.fragment.AskFragment;
-import emilsoft.hackernews.fragment.AskJobFragment;
-import emilsoft.hackernews.fragment.BaseItemFragment;
 import emilsoft.hackernews.fragment.HomeFragment;
 import emilsoft.hackernews.fragment.JobFragment;
 import emilsoft.hackernews.fragment.StoryFragment;

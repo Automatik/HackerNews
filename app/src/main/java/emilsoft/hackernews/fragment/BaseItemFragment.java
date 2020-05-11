@@ -1,7 +1,6 @@
 package emilsoft.hackernews.fragment;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -34,7 +33,6 @@ import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentItemBinding;
-import emilsoft.hackernews.viewmodel.AskJobViewModel;
 import emilsoft.hackernews.viewmodel.ItemViewModel;
 
 public abstract class BaseItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
