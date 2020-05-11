@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.api.Comment;
@@ -17,6 +18,7 @@ import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -79,7 +81,7 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onError(Throwable e) {
-                        e.printStackTrace();
+                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                     }
 
                     @Override
@@ -165,20 +167,17 @@ public class HackerNewsRepository {
         for (Long id : ids) {
             observables.add(hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()));
         }
-        Observable<List<? extends Item>> observable = Observable.zip(observables, new Function<Object[], List<? extends Item>>() {
-            @Override
-            public List<? extends Item> apply(Object[] items) throws Exception {
-                List<Item> list = new ArrayList<>(items.length);
-                for(Object i : items) {
-                    Item item = (Item) i;
-                    switch (item.getType()) {
-                        case JOB_TYPE: list.add((Job) i); break;
-                        case STORY_TYPE:
-                        default: list.add((Story) i);
-                    }
+        Observable<List<? extends Item>> observable = Observable.zip(observables, items -> {
+            List<Item> list = new ArrayList<>(items.length);
+            for(Object i : items) {
+                Item item = (Item) i;
+                switch (item.getType()) {
+                    case JOB_TYPE: list.add((Job) i); break;
+                    case STORY_TYPE:
+                    default: list.add((Story) i);
                 }
-                return list;
             }
+            return list;
         });
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -195,7 +194,7 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onError(Throwable e) {
-
+                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                     }
 
                     @Override
@@ -296,7 +295,7 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onError(Throwable e) {
-
+                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                     }
 
                     @Override
