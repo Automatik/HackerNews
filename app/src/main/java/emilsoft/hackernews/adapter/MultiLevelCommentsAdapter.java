@@ -12,7 +12,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,31 +19,20 @@ import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.databinding.CommentsListItemBinding;
+import emilsoft.hackernews.expandablerecyclerview.MultiLevelAdapter;
+import emilsoft.hackernews.expandablerecyclerview.MultiLevelRecyclerView;
+import emilsoft.hackernews.expandablerecyclerview.models.RecyclerViewItem;
 
-public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHolder> {
+public class MultiLevelCommentsAdapter extends MultiLevelAdapter<MultiLevelCommentsAdapter.ViewHolder> {
 
-    private HashMap<Long, List<Comment>> collapsedParentComments;
-    private HashMap<Long, Long> collapsedChildren;
-    private LinkedList<Comment> commentsList;
     private int[] colorCodes;
     private int levelStartMargin;
     private Context context;
+    private MultiLevelRecyclerView recyclerView;
 
-
-    public CommentsAdapter(LinkedList<Comment> commentsList, HashMap<Long, List<Comment>> collapsedParentComments,
-                           HashMap<Long, Long> collapsedChildren) {
-        if (commentsList == null)
-            commentsList = new LinkedList<>();
-        this.commentsList = commentsList;
-        if (collapsedParentComments == null)
-            collapsedParentComments = new HashMap<>();
-        this.collapsedParentComments = collapsedParentComments;
-        if (collapsedChildren == null)
-            collapsedChildren = new HashMap<>();
-        this.collapsedChildren = collapsedChildren;
-
+    public MultiLevelCommentsAdapter(LinkedList<Comment> commentsList) {
+        super(commentsList);
     }
-
 
     @NonNull
     @Override
@@ -52,16 +40,13 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         return new ViewHolder(CommentsListItemBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent, false),
-                collapseCommentsListener,
-                false
-        );
+                collapseCommentListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.mComment = commentsList.get(position);
-        holder.isCollapsed = collapsedParentComments.containsKey(holder.mComment.getId());
-//        holder.isCollapsed = holder.mComment.isCollapsed();
+        holder.mComment = (Comment) recyclerViewItemList.get(position);
+
         holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mComment.getTime()));
 
         if (holder.mComment.isDeleted()) {
@@ -106,25 +91,19 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         params.leftMargin = holder.mComment.getLevel() * levelStartMargin;
         holder.mBinding.getRoot().setLayoutParams(params);
 
-        if(holder.isCollapsed) {
-            holder.mCollapseText.setText(R.string.comment_expand_text);
-            holder.mCollapseIcon.setImageDrawable(context.getDrawable(R.drawable.ic_expand_more_24dp));
-        } else {
+        if(holder.mComment.isExpanded()) {
             holder.mCollapseText.setText(R.string.comment_collapse_text);
             holder.mCollapseIcon.setImageDrawable(context.getDrawable(R.drawable.ic_expand_less_24dp));
+        } else {
+            holder.mCollapseText.setText(R.string.comment_expand_text);
+            holder.mCollapseIcon.setImageDrawable(context.getDrawable(R.drawable.ic_expand_more_24dp));
         }
-    }
-
-    @Override
-    public int getItemCount() {
-        if(commentsList != null)
-            return commentsList.size();
-        return 0;
     }
 
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
+        this.recyclerView = (MultiLevelRecyclerView) recyclerView;
         context = recyclerView.getContext();
         colorCodes = context.getResources().getIntArray(R.array.color_codes);
         levelStartMargin = (int) (context.getResources().getDimension(R.dimen.comment_level_start_left_margin)
@@ -141,54 +120,13 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         return (colorCodes != null) ? colorCodes[level % colorCodes.length] : 0;
     }
 
-    private CollapseCommentsListener collapseCommentsListener = new CollapseCommentsListener() {
-        @Override
-        public void onCollapse(Comment comment) {
-            final int index = commentsList.indexOf(comment);
-            final int level = comment.getLevel();
-            if(index == -1) return;
-            int i = index + 1;
-//            final List<Comment> childs = new LinkedList<>();
-//            Observable.fromIterable(commentsList.subList(i, commentsList.size()))
-//                    .takeWhile(c -> c.getLevel() > level)
-//                    .toList()
-//                    .subscribe(comments -> {
-//                        childs.addAll(comments);
-//                        commentsList.subList(index + 1, index + 1 + childs.size()).clear();
-//                        notifyItemRangeRemoved(index + 1, childs.size());
-//                        collapsedComments.put(comment.getId(), childs);
-//                    })
-//                    .dispose();
-            //Without using RxJava
-
-            List<Comment> childs = new LinkedList<>();
-            Comment temp;
-            while (i < commentsList.size() && (temp = commentsList.get(i)).getLevel() > level) {
-                childs.add(temp);
-                i++;
-            }
-            commentsList.subList(index + 1, index + 1 + childs.size()).clear();
-            notifyItemRangeRemoved(index + 1, childs.size());
-            collapsedParentComments.put(comment.getId(), childs);
-        }
-
-        @Override
-        public void onExpand(Comment comment) {
-            long id = comment.getId();
-            int index = commentsList.indexOf(comment);
-            if(index == -1) return;
-            List<Comment> childs = collapsedParentComments.get(id);
-            if(childs == null) return;
-            commentsList.addAll(index + 1, childs);
-            notifyItemRangeInserted(index + 1, childs.size());
-            collapsedParentComments.remove(id);
-            collapsedChildren.remove(id);
-        }
+    private CollapseCommentListener collapseCommentListener = position -> {
+        recyclerView.toggleItemsGroup(position);
     };
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends MultiLevelRecyclerView.ViewHolder {
 
-        final CollapseCommentsListener listener;
+        final CollapseCommentListener listener;
         final CommentsListItemBinding mBinding;
         final TextView mTime;
         final TextView mUser;
@@ -197,11 +135,10 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         final View mLevel;
         final ImageView mCollapseIcon;
         Comment mComment;
-        boolean isCollapsed;
 
-
-        ViewHolder(@NonNull CommentsListItemBinding binding, CollapseCommentsListener listener, boolean startCollapsed) {
+        public ViewHolder(@NonNull CommentsListItemBinding binding, CollapseCommentListener listener) {
             super(binding.getRoot());
+            this.listener = listener;
             mBinding = binding;
             mLevel = binding.commentLevel;
             mTime = binding.commentTime;
@@ -209,35 +146,25 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
             mText = binding.commentText;
             mCollapseText = binding.commentExpandText;
             mCollapseIcon = binding.commentExpandImageview;
-            this.listener = listener;
-            View.OnClickListener collapseIconClickListener = v -> {
-                if(listener != null) {
-                    if (isCollapsed) {
-                        listener.onExpand(mComment);
-                        mCollapseText.setText(R.string.comment_collapse_text);
-                        mCollapseIcon.setImageDrawable(v.getResources().getDrawable(R.drawable.ic_expand_less_24dp));
-                    }
-                    else {
-                        listener.onCollapse(mComment);
-                        mCollapseText.setText(R.string.comment_expand_text);
-                        mCollapseIcon.setImageDrawable(v.getResources().getDrawable(R.drawable.ic_expand_more_24dp));
-                    }
+            View.OnClickListener onClickListener = v -> {
+                if(mComment.isExpanded()) {
+                    mCollapseText.setText(R.string.comment_expand_text);
+                    mCollapseIcon.setImageDrawable(v.getResources().getDrawable(R.drawable.ic_expand_more_24dp));
+                } else {
+                    mCollapseText.setText(R.string.comment_collapse_text);
+                    mCollapseIcon.setImageDrawable(v.getResources().getDrawable(R.drawable.ic_expand_less_24dp));
                 }
-                isCollapsed = !isCollapsed;
+                if(listener != null)
+                    listener.toggleComment(getAdapterPosition());
             };
-            mCollapseText.setOnClickListener(collapseIconClickListener);
-            mCollapseIcon.setOnClickListener(collapseIconClickListener);
-            isCollapsed = startCollapsed;
+            mCollapseText.setOnClickListener(onClickListener);
+            mCollapseIcon.setOnClickListener(onClickListener);
         }
-
     }
 
-    private interface CollapseCommentsListener {
+    private interface CollapseCommentListener {
 
-        void onCollapse(Comment comment);
-
-        void onExpand(Comment comment);
-
+        void toggleComment(int position);
     }
 
 }

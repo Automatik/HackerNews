@@ -21,10 +21,6 @@ public class HomeViewModel extends ViewModel {
     public int lastItemLoadedIndex;
     public long lastIdsRefreshTime = 0L;
 
-    public long start1 = 0L;
-    public long stop1 = 0L;
-    public long start2=0L, stop2 = 0L;
-
     public HomeViewModel() {
         repository = HackerNewsRepository.getInstance();
         itemsIds = new ArrayList<>();
