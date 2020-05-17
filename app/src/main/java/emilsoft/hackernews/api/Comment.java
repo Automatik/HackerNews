@@ -66,6 +66,16 @@ public class Comment extends Item implements RecyclerViewItem {
 
     // Add after implementing Expandable RecyclerView
 
+    boolean isCollapsed;
+
+    public void setIsCollapsed(boolean isCollapsed) {
+        this.isCollapsed = isCollapsed;
+    }
+
+    public boolean isCollapsed() {
+        return isCollapsed;
+    }
+
     int position;
 
     boolean isExpanded;

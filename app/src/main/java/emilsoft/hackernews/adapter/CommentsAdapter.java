@@ -60,7 +60,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.mComment = commentsList.get(position);
-        holder.isCollapsed = collapsedParentComments.containsKey(holder.mComment.getId());
+        holder.mComment.setIsCollapsed(collapsedParentComments.containsKey(holder.mComment.getId()));
 //        holder.isCollapsed = holder.mComment.isCollapsed();
         holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mComment.getTime()));
 
@@ -106,7 +106,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         params.leftMargin = holder.mComment.getLevel() * levelStartMargin;
         holder.mBinding.getRoot().setLayoutParams(params);
 
-        if(holder.isCollapsed) {
+        if(holder.mComment.isCollapsed()) {
             holder.mCollapseText.setText(R.string.comment_expand_text);
             holder.mCollapseIcon.setImageDrawable(context.getDrawable(R.drawable.ic_expand_more_24dp));
         } else {
@@ -170,6 +170,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
             commentsList.subList(index + 1, index + 1 + childs.size()).clear();
             notifyItemRangeRemoved(index + 1, childs.size());
             collapsedParentComments.put(comment.getId(), childs);
+//            collapsedChildren.put(comment.getId(), comment.getId());
         }
 
         @Override
@@ -197,7 +198,6 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         final View mLevel;
         final ImageView mCollapseIcon;
         Comment mComment;
-        boolean isCollapsed;
 
 
         ViewHolder(@NonNull CommentsListItemBinding binding, CollapseCommentsListener listener, boolean startCollapsed) {
@@ -212,7 +212,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
             this.listener = listener;
             View.OnClickListener collapseIconClickListener = v -> {
                 if(listener != null) {
-                    if (isCollapsed) {
+                    if (mComment.isCollapsed()) {
                         listener.onExpand(mComment);
                         mCollapseText.setText(R.string.comment_collapse_text);
                         mCollapseIcon.setImageDrawable(v.getResources().getDrawable(R.drawable.ic_expand_less_24dp));
@@ -223,11 +223,11 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
                         mCollapseIcon.setImageDrawable(v.getResources().getDrawable(R.drawable.ic_expand_more_24dp));
                     }
                 }
-                isCollapsed = !isCollapsed;
+                mComment.setIsCollapsed(!mComment.isCollapsed());
             };
             mCollapseText.setOnClickListener(collapseIconClickListener);
             mCollapseIcon.setOnClickListener(collapseIconClickListener);
-            isCollapsed = startCollapsed;
+//            mComment.setIsCollapsed(startCollapsed);
         }
 
     }

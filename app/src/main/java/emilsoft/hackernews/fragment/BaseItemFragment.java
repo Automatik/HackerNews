@@ -49,9 +49,10 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     protected TextView titleText, urlText, pointsText, numCommentsText, itemText;
     protected LinearLayout noCommentsLayout;
     protected SwipeRefreshLayout swipeRefreshLayout;
-    protected MultiLevelRecyclerView recyclerView;
-//    protected CommentsAdapter adapter;
-    protected MultiLevelCommentsAdapter adapter;
+    protected RecyclerView recyclerView;
+    protected CommentsAdapter adapter;
+//    protected MultiLevelRecyclerView recyclerView;
+//    protected MultiLevelCommentsAdapter adapter;
     protected ItemViewModel itemViewModel;
     protected CustomTabActivityHelper.LaunchUrlCallback launchUrlCallback;
 
@@ -85,7 +86,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
         recyclerView = binding.itemCommentsList;
 //        recyclerView.setLayoutManager(new LinearLayoutManager(getContext())); //TODO vedere se serve
 //        recyclerView.removeItemClickListeners();
-        recyclerView.setToggleItemOnClick(false);
+//        recyclerView.setToggleItemOnClick(false);
 
         itemText = binding.itemText;
         titleText = binding.itemTitle;
@@ -105,9 +106,9 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-//        adapter = new CommentsAdapter(itemViewModel.commentsList,
-//                itemViewModel.collapsedParentComments, itemViewModel.collapsedChildren);
-        adapter = new MultiLevelCommentsAdapter(itemViewModel.commentsList);
+        adapter = new CommentsAdapter(itemViewModel.commentsList,
+                itemViewModel.collapsedParentComments, itemViewModel.collapsedChildren);
+//        adapter = new MultiLevelCommentsAdapter(itemViewModel.commentsList);
         recyclerView.setAdapter(adapter);
         observeItem(false);
     }
@@ -176,65 +177,124 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
             swipeRefreshLayout.setRefreshing(false);
     }
 
-//    protected void observeComments(List<Long> ids) {
-//        itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
-//            List<Long> newKidsIds = new ArrayList<>();
-//            for(Comment comment : comments) {
-//                // Is this comment a collapsed parent ?
-//                List<Comment> children = itemViewModel.collapsedParentComments.get(comment.getId());
-//                if(children != null) {
-//                    // This comment is a collapsed parent
-//                    children.clear();
+    protected void observeComments(List<Long> ids) {
+        itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
+            List<Long> newKidsIds = new ArrayList<>();
+            for(Comment comment : comments) {
+                // Is this comment a collapsed parent ?
+                List<Comment> children = itemViewModel.collapsedParentComments.get(comment.getId());
+                if(children != null) {
+                    // This comment is a collapsed parent
+                    children.clear();
 //                    itemViewModel.collapsedChildren.put(comment.getId(), comment.getId());
-//                    addCommentToList(comment);
-//                } else {
-//                    // This comment is not a collapsed parent
-//                    long idParent = comment.getParent();
-//                    Long idCollapsedParent = itemViewModel.collapsedChildren.get(idParent);
-//                    if(idCollapsedParent != null) {
-//                        children = itemViewModel.collapsedParentComments.get(idCollapsedParent);
-//                        if(children == null) {
-//                            // The collapsed parent is now expanded and thus this comment's parent
-//                            // must be removed from collapsedChildren
-//                            itemViewModel.collapsedChildren.remove(idParent);
-//                            if (BuildConfig.DEBUG && !itemViewModel.commentsList.contains(new Comment(idParent)))
-//                                throw new AssertionError();
-//                            addCommentToList(comment);
-//                        } else {
-//                            // This comment is child of a collapsed parent
-//                            itemViewModel.collapsedChildren.put(comment.getId(), idCollapsedParent);
-//                            Comment parent = new Comment(idParent);
-//                            int index = children.indexOf(parent);
-//                            if(index > -1) { //Should never be negative
-//                                parent = children.get(index);
-//                                comment.setLevel(parent.getLevel() + 1);
-//                                children.add(index + 1, comment);
-//                                itemViewModel.collapsedParentComments.put(idCollapsedParent, children);
-//                            } else {
+
+                    long idParent = comment.getParent();
+                    List<Comment> parentChildren = itemViewModel.collapsedParentComments.get(idParent);
+                    if(parentChildren != null) {
+                        // This comment is collapsed and is also child of another collapsed parent
+                        Long idCollapsedParent = itemViewModel.collapsedChildren.get(idParent);
+                        if(idCollapsedParent != null) {
+                            List<Comment> parentParentChildren = itemViewModel.collapsedParentComments.get(idCollapsedParent);
+                            if(parentParentChildren != null) {
+                                itemViewModel.collapsedChildren.put(comment.getId(), idCollapsedParent);
+                                Comment parent = new Comment(idParent);
+                                int index = parentParentChildren.indexOf(parent);
+                                if(index > -1) {
+                                    parent = parentParentChildren.get(index);
+                                    comment.setLevel(parent.getLevel() + 1);
+                                    parentChildren.add(comment);
+                                    itemViewModel.collapsedParentComments.put(idParent, parentChildren);
+                                } else {
+                                    index = itemViewModel.commentsList.indexOf(parent);
+                                    if(BuildConfig.DEBUG && index < 0) {
+                                        throw new AssertionError("parent in CommentList has index -1");
+                                    }
+                                    parent = itemViewModel.commentsList.get(index);
+                                    comment.setLevel(parent.getLevel() + 1);
+                                    parentChildren.add(comment);
+                                    itemViewModel.collapsedParentComments.put(idParent, parentChildren);
+                                }
+                            } else {
+                                if(BuildConfig.DEBUG) {
+                                    throw new AssertionError("parentParentChildren is null");
+                                }
+                            }
+                        } else {
+                            if(BuildConfig.DEBUG) {
+                                throw new AssertionError("Long idCollapsedParent is null");
+                            }
+                        }
+                    } else {
+                        // This comment is collapsed (parent) but it's not a child of another collapsed parent
+                        itemViewModel.collapsedChildren.put(comment.getId(), comment.getId());
+                        addCommentToList(comment);
+                    }
+                } else {
+                    // This comment is not a collapsed parent
+                    long idParent = comment.getParent();
+                    List<Comment> parentChildren = itemViewModel.collapsedParentComments.get(idParent);
+                    if(parentChildren == null) {
+                        // This comment is not a child of a collapsed parent
+                        addCommentToList(comment);
+                    }
+                    Long idCollapsedParent = itemViewModel.collapsedChildren.get(idParent);
+                    if(idCollapsedParent != null) {
+                        List<Comment> parentParentChildren = itemViewModel.collapsedParentComments.get(idCollapsedParent);
+                        if(parentParentChildren == null) {
+                            // The collapsed parent is now expanded and thus this comment's parent
+                            // must be removed from collapsedChildren
+                            Log.v(MainActivity.TAG, "observeComments/ collapsed parent is now expanded");
+                            itemViewModel.collapsedChildren.remove(idParent);
+                            if (BuildConfig.DEBUG && !itemViewModel.commentsList.contains(new Comment(idParent)))
+                                throw new AssertionError();
+                            addCommentToList(comment);
+                        } else {
+                            // This comment is child of a collapsed parent
+                            itemViewModel.collapsedChildren.put(comment.getId(), idCollapsedParent);
+                            Comment parent = new Comment(idParent);
+                            int index = parentParentChildren.indexOf(parent);
+                            if(index > -1) { //Should never be negative
+                                parent = parentParentChildren.get(index);
+                                comment.setLevel(parent.getLevel() + 1);
+//                                parentChildren.add(index + 1, comment);
+                                parentChildren.add(comment);
+//                                itemViewModel.collapsedParentComments.put(idCollapsedParent, parentParentChildren);
+                                itemViewModel.collapsedParentComments.put(idParent, parentChildren);
+                            } else {
+                                index = itemViewModel.commentsList.indexOf(parent);
+                                if(BuildConfig.DEBUG && index < 0)
+                                    throw new AssertionError("observeComments/ index is - 1");
+                                parent = itemViewModel.commentsList.get(index);
+                                comment.setLevel(parent.getLevel() + 1);
+//                                parentParentChildren.add(comment);
+                                parentChildren.add(comment);
+//                                itemViewModel.collapsedParentComments.put(idCollapsedParent, parentParentChildren);
+                                itemViewModel.collapsedParentComments.put(idParent, parentChildren);
 //                                Log.v(MainActivity.TAG, "observeComments/ index is -1");
-//                            }
-//                        }
-//                    } else {
-//                        // This comment is not a child of a collapsed parent
-//                        addCommentToList(comment);
-//                    }
-//                }
-//                long[] kids = comment.getKids();
-//                if(kids != null) {
-//                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-//                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
-//                    else {
-//                        List<Long> temp = new ArrayList<>(kids.length);
-//                        for(long id : kids)
-//                            temp.add(id);
-//                        newKidsIds.addAll(temp);
-//                    }
-//                }
-//            }
-//            if(newKidsIds.size() > 0)
-//                observeComments(newKidsIds);
-//        });
-//    }
+
+                            }
+                        }
+                    } else {
+                        // This comment is not a child of a collapsed parent
+                        addCommentToList(comment);
+                    }
+                }
+                long[] kids = comment.getKids();
+                if(kids != null) {
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+                    else {
+                        List<Long> temp = new ArrayList<>(kids.length);
+                        for(long id : kids)
+                            temp.add(id);
+                        newKidsIds.addAll(temp);
+                    }
+                }
+            }
+            if(newKidsIds.size() > 0)
+                observeComments(newKidsIds);
+        });
+    }
 
     private void addCommentToList(Comment comment) {
         int pos = itemViewModel.commentsList.size();
@@ -285,7 +345,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
         }
     }
 
-    protected void observeComments(List<Long> ids) {
+    protected void observeCommentsOld(List<Long> ids) {
         itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
             List<Long> newKidsIds = new ArrayList<>();
             for(Comment comment : comments) {
