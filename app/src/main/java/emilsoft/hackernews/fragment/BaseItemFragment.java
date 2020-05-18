@@ -196,12 +196,13 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
                         if(idCollapsedParent != null) {
                             List<Comment> parentParentChildren = itemViewModel.collapsedParentComments.get(idCollapsedParent);
                             if(parentParentChildren != null) {
-                                itemViewModel.collapsedChildren.put(comment.getId(), idCollapsedParent);
+                                itemViewModel.collapsedChildren.put(comment.getId(), idParent); //idCollapsedParent
                                 Comment parent = new Comment(idParent);
                                 int index = parentParentChildren.indexOf(parent);
                                 if(index > -1) {
                                     parent = parentParentChildren.get(index);
                                     comment.setLevel(parent.getLevel() + 1);
+//                                    parentChildren.add(index + 1, comment); //This produces indexOutOfBoundsException index: 3, size: 0
                                     parentChildren.add(comment);
                                     itemViewModel.collapsedParentComments.put(idParent, parentChildren);
                                 } else {
@@ -225,54 +226,80 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
                             }
                         }
                     } else {
-                        // This comment is collapsed (parent) but it's not a child of another collapsed parent
-                        itemViewModel.collapsedChildren.put(comment.getId(), comment.getId());
-                        addCommentToList(comment);
+                        //This comment's parent is not collapsed
+                        Long idCollapsedParent = itemViewModel.collapsedChildren.get(idParent);
+                        if(idCollapsedParent != null) {
+                            //This comment's parent is child of another collapsed parent
+                            itemViewModel.collapsedChildren.put(comment.getId(), idCollapsedParent);
+                            List<Comment> parentParentChildren = itemViewModel.collapsedParentComments.get(idCollapsedParent);
+                            if(parentParentChildren != null) {
+                                Comment parent = new Comment(idParent);
+                                int index = parentParentChildren.indexOf(parent);
+                                if(index > -1) {
+                                    parent = parentParentChildren.get(index);
+                                    comment.setLevel(parent.getLevel() + 1);
+                                    parentParentChildren.add(index + 1, comment);
+                                } else {
+                                    if(BuildConfig.DEBUG) {
+                                        throw new AssertionError("index is -1, should'nt be because the parent is child of a collapsed parent");
+                                    }
+                                }
+                            } else {
+                                if(BuildConfig.DEBUG) {
+                                    throw new AssertionError("parentParentChildren is null");
+                                }
+                            }
+                        } else {
+                            // This comment is collapsed (it's a top parent level 0) but it's not a child of no other collapsed parent
+                            itemViewModel.collapsedChildren.put(comment.getId(), comment.getId());
+                            addCommentToList(comment);
+                        }
                     }
                 } else {
                     // This comment is not a collapsed parent
                     long idParent = comment.getParent();
                     List<Comment> parentChildren = itemViewModel.collapsedParentComments.get(idParent);
-                    if(parentChildren == null) {
-                        // This comment is not a child of a collapsed parent
-                        addCommentToList(comment);
-                    }
-                    Long idCollapsedParent = itemViewModel.collapsedChildren.get(idParent);
-                    if(idCollapsedParent != null) {
-                        List<Comment> parentParentChildren = itemViewModel.collapsedParentComments.get(idCollapsedParent);
-                        if(parentParentChildren == null) {
-                            // The collapsed parent is now expanded and thus this comment's parent
-                            // must be removed from collapsedChildren
-                            Log.v(MainActivity.TAG, "observeComments/ collapsed parent is now expanded");
-                            itemViewModel.collapsedChildren.remove(idParent);
-                            if (BuildConfig.DEBUG && !itemViewModel.commentsList.contains(new Comment(idParent)))
-                                throw new AssertionError();
-                            addCommentToList(comment);
-                        } else {
-                            // This comment is child of a collapsed parent
-                            itemViewModel.collapsedChildren.put(comment.getId(), idCollapsedParent);
-                            Comment parent = new Comment(idParent);
-                            int index = parentParentChildren.indexOf(parent);
-                            if(index > -1) { //Should never be negative
-                                parent = parentParentChildren.get(index);
-                                comment.setLevel(parent.getLevel() + 1);
-//                                parentChildren.add(index + 1, comment);
-                                parentChildren.add(comment);
-//                                itemViewModel.collapsedParentComments.put(idCollapsedParent, parentParentChildren);
-                                itemViewModel.collapsedParentComments.put(idParent, parentChildren);
+                    if(parentChildren != null) {
+                        Long idCollapsedParent = itemViewModel.collapsedChildren.get(idParent);
+                        if(idCollapsedParent != null) {
+                            List<Comment> parentParentChildren = itemViewModel.collapsedParentComments.get(idCollapsedParent);
+                            if (parentParentChildren == null) {
+                                // The collapsed parent is now expanded and thus this comment's parent
+                                // must be removed from collapsedChildren
+                                Log.v(MainActivity.TAG, "observeComments/ collapsed parent is now expanded");
+                                itemViewModel.collapsedChildren.remove(idParent);
+                                if (BuildConfig.DEBUG && !itemViewModel.commentsList.contains(new Comment(idParent)))
+                                    throw new AssertionError();
+                                addCommentToList(comment);
                             } else {
-                                index = itemViewModel.commentsList.indexOf(parent);
-                                if(BuildConfig.DEBUG && index < 0)
-                                    throw new AssertionError("observeComments/ index is - 1");
-                                parent = itemViewModel.commentsList.get(index);
-                                comment.setLevel(parent.getLevel() + 1);
-//                                parentParentChildren.add(comment);
-                                parentChildren.add(comment);
-//                                itemViewModel.collapsedParentComments.put(idCollapsedParent, parentParentChildren);
-                                itemViewModel.collapsedParentComments.put(idParent, parentChildren);
-//                                Log.v(MainActivity.TAG, "observeComments/ index is -1");
+                                // This comment is child of a collapsed parent
+                                itemViewModel.collapsedChildren.put(comment.getId(), idCollapsedParent);
+                                Comment parent = new Comment(idParent);
+                                int index = parentParentChildren.indexOf(parent);
+                                if (index > -1) { //Should never be negative
+                                    parent = parentParentChildren.get(index);
+                                    comment.setLevel(parent.getLevel() + 1);
+//                                    parentChildren.add(index + 1, comment); //This produces indexOutOfBoundsException
+                                    parentChildren.add(comment);
+    //                                itemViewModel.collapsedParentComments.put(idCollapsedParent, parentParentChildren);
+                                    itemViewModel.collapsedParentComments.put(idParent, parentChildren);
+                                } else {
+                                    index = itemViewModel.commentsList.indexOf(parent);
+                                    if (BuildConfig.DEBUG && index < 0)
+                                        throw new AssertionError("observeComments/ index is - 1");
+                                    parent = itemViewModel.commentsList.get(index);
+                                    comment.setLevel(parent.getLevel() + 1);
+    //                                parentParentChildren.add(comment);
+                                    parentChildren.add(comment);
+    //                                itemViewModel.collapsedParentComments.put(idCollapsedParent, parentParentChildren);
+                                    itemViewModel.collapsedParentComments.put(idParent, parentChildren);
+    //                                Log.v(MainActivity.TAG, "observeComments/ index is -1");
 
+                                }
                             }
+                        } else {
+                            if (BuildConfig.DEBUG)
+                                throw new AssertionError("idCollapsedParent is null");
                         }
                     } else {
                         // This comment is not a child of a collapsed parent
