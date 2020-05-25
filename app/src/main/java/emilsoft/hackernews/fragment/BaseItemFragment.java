@@ -18,7 +18,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -33,13 +32,15 @@ import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.adapter.CommentsAdapter;
-import emilsoft.hackernews.adapter.MultiLevelCommentsAdapter;
+import emilsoft.hackernews.adapter.MultiCommentsAdapter;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentItemBinding;
-import emilsoft.hackernews.expandablerecyclerview.MultiLevelRecyclerView;
 import emilsoft.hackernews.viewmodel.ItemViewModel;
+import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.subjects.PublishSubject;
 
 public abstract class BaseItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
 
@@ -50,9 +51,8 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     protected LinearLayout noCommentsLayout;
     protected SwipeRefreshLayout swipeRefreshLayout;
     protected RecyclerView recyclerView;
-    protected CommentsAdapter adapter;
-//    protected MultiLevelRecyclerView recyclerView;
-//    protected MultiLevelCommentsAdapter adapter;
+//    protected CommentsAdapter adapter;
+    protected MultiCommentsAdapter adapter;
     protected ItemViewModel itemViewModel;
     protected CustomTabActivityHelper.LaunchUrlCallback launchUrlCallback;
 
@@ -106,9 +106,10 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        adapter = new CommentsAdapter(itemViewModel.commentsList,
-                itemViewModel.collapsedParentComments, itemViewModel.collapsedChildren);
+//        adapter = new CommentsAdapter(itemViewModel.commentsList,
+//                itemViewModel.collapsedParentComments, itemViewModel.collapsedChildren);
 //        adapter = new MultiLevelCommentsAdapter(itemViewModel.commentsList);
+        adapter = new MultiCommentsAdapter(itemViewModel.multiLevelData);
         recyclerView.setAdapter(adapter);
         observeItem(false);
     }
@@ -178,6 +179,66 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     }
 
     protected void observeComments(List<Long> ids) {
+//        List<Long> newKidsIds = new ArrayList<>();
+//        itemViewModel.getLiveComments(ids, new io.reactivex.Observer<Comment>() {
+//            @Override
+//            public void onSubscribe(Disposable d) {
+//
+//            }
+//
+//            @Override
+//            public void onNext(Comment comment) {
+//                if(adapter != null)
+//                    adapter.addItem(comment);
+//                long[] kids = comment.getKids();
+//                if(kids != null) {
+//                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+//                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+//                    else {
+//                        List<Long> temp = new ArrayList<>(kids.length);
+//                        for(long id : kids)
+//                            temp.add(id);
+//                        newKidsIds.addAll(temp);
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//
+//            }
+//
+//            @Override
+//            public void onComplete() {
+//                if(newKidsIds.size() > 0)
+//                    observeComments(newKidsIds);
+//            }
+//        });
+        itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
+            List<Long> newKidsIds = new ArrayList<>();
+            for(Comment comment : comments) {
+
+                if(adapter != null)
+                    adapter.addItem(comment);
+
+                long[] kids = comment.getKids();
+                if(kids != null) {
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+                    else {
+                        List<Long> temp = new ArrayList<>(kids.length);
+                        for(long id : kids)
+                            temp.add(id);
+                        newKidsIds.addAll(temp);
+                    }
+                }
+            }
+            if(newKidsIds.size() > 0)
+                observeComments(newKidsIds);
+        });
+    }
+
+    protected void observeCommentsWorking(List<Long> ids) {
         itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
             List<Long> newKidsIds = new ArrayList<>();
             for(Comment comment : comments) {
@@ -389,7 +450,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
                         int index = itemViewModel.commentsList.indexOf(parent);
                         parent = itemViewModel.commentsList.get(index);
                         comment.setLevel(parent.getLevel() + 1);
-                        parent.addChild(comment);
+                        //parent.addChild(comment);
                         index += 1; //+1 after the parent
 //                        itemViewModel.commentsList.add(index, comment);
                         if(adapter != null)

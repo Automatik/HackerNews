@@ -1,13 +1,7 @@
 package emilsoft.hackernews.api;
 
-import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import emilsoft.hackernews.expandablerecyclerview.models.RecyclerViewItem;
 
 public class Comment extends Item implements RecyclerViewItem {
 
@@ -68,20 +62,6 @@ public class Comment extends Item implements RecyclerViewItem {
 
     boolean isCollapsed;
 
-    public void setIsCollapsed(boolean isCollapsed) {
-        this.isCollapsed = isCollapsed;
-    }
-
-    public boolean isCollapsed() {
-        return isCollapsed;
-    }
-
-    int position;
-
-    boolean isExpanded;
-
-    List<RecyclerViewItem> children;
-
     public long[] getKids() {
         return kids;
     }
@@ -99,26 +79,6 @@ public class Comment extends Item implements RecyclerViewItem {
     }
 
     @Override
-    public boolean isExpanded() {
-        return isExpanded;
-    }
-
-    @Override
-    public void setExpanded(boolean expanded) {
-        this.isExpanded = expanded;
-    }
-
-    @Override
-    public int getPosition() {
-        return position;
-    }
-
-    @Override
-    public void setPosition(int position) {
-        this.position = position;
-    }
-
-    @Override
     public int getLevel() { return level; }
 
     @Override
@@ -126,26 +86,12 @@ public class Comment extends Item implements RecyclerViewItem {
         this.level = level;
     }
 
-    @Override
-    public List<RecyclerViewItem> getChildren() {
-        return children;
+    public void setIsCollapsed(boolean isCollapsed) {
+        this.isCollapsed = isCollapsed;
     }
 
-    @Override
-    public void addChild(RecyclerViewItem child) {
-        if(children == null)
-            children = new ArrayList<>();
-        children.add(child);
-    }
-
-    @Override
-    public void addChildren(List<RecyclerViewItem> children) {
-        this.children = children;
-    }
-
-    @Override
-    public boolean hasChildren() {
-        return children != null && children.size() > 0;
+    public boolean isCollapsed() {
+        return isCollapsed;
     }
 
     @Override

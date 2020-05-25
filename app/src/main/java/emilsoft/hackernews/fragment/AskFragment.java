@@ -146,8 +146,10 @@ public class AskFragment extends BaseItemFragment {
                         showTextNoComments();
                     }
                     if(refreshComments) {
-                        int size = itemViewModel.commentsList.size();
-                        itemViewModel.commentsList.size();
+//                        int size = itemViewModel.commentsList.size();
+//                        itemViewModel.commentsList.size();
+                        int size = itemViewModel.multiLevelData.itemsSize();
+                        itemViewModel.multiLevelData.clear();
                         if(adapter != null)
                             adapter.notifyItemRangeRemoved(0, size);
                         startObservingComments(askStory.getKids());

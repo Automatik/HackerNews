@@ -20,10 +20,12 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
+import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.ResponseBody;
 
 public class HackerNewsRepository {
 
@@ -294,44 +296,98 @@ public class HackerNewsRepository {
         return data;
     }
 
-    public LiveData<List<Comment>> getComments(List<Long> ids) {
-        final MutableLiveData<List<Comment>> data = new MutableLiveData<>();
-        List<Observable<Comment>> observables = new ArrayList<>(ids.size());
-        for (Long id : ids) {
-            observables.add(hackerNewsApi.getComment(id).subscribeOn(Schedulers.io()));
-        }
-        Observable<List<Comment>> observable = Observable.zip(observables, new Function<Object[], List<Comment>>() {
-            @Override
-            public List<Comment> apply(Object[] objects) throws Exception {
-                List<Comment> list = new ArrayList<>(objects.length);
-                for(Object o : objects)
-                    list.add((Comment) o);
-                return list;
-            }
-        });
-        observable.subscribeOn(Schedulers.io())
+    public void getLiveComments(List<Long> ids, Observer<Comment> observer) {
+        Observable.fromIterable(ids)
+                .flatMap((id) -> hackerNewsApi.getComment(id))
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<List<Comment>>() {
+                .subscribe(observer);
+    }
+
+    public LiveData<List<Comment>> getComments(List<Long> ids) {
+        final List<Comment> commentList = new ArrayList<>(ids.size());
+        final MutableLiveData<List<Comment>> data = new MutableLiveData<>();
+        Observable.fromIterable(ids)
+                .flatMap((id) -> hackerNewsApi.getComment(id).subscribeOn(Schedulers.io()))
+                .subscribeOn(Schedulers.io())
+                .toList()
+                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Observer<Comment>() {
+//                    @Override
+//                    public void onSubscribe(Disposable d) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onNext(Comment comment) {
+//                        commentList.add(comment);
+//                        data.postValue(commentList);
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//
+//                    }
+//                });
+                .subscribe(new SingleObserver<List<Comment>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(List<Comment> comments) {
-                        data.setValue(comments);
+                    public void onSuccess(List<Comment> commentList) {
+                        data.setValue(commentList);
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
-                    }
-
-                    @Override
-                    public void onComplete() {
-
+                        Log.v(MainActivity.TAG, "HackerNewsRepository/getComments/ "+ Log.getStackTraceString(e));
                     }
                 });
+
+//        List<Observable<Comment>> observables = new ArrayList<>(ids.size());
+//        for (Long id : ids) {
+//            observables.add(hackerNewsApi.getComment(id).subscribeOn(Schedulers.io()));
+//        }
+//        Observable<List<Comment>> observable = Observable.zip(observables, new Function<Object[], List<Comment>>() {
+//            @Override
+//            public List<Comment> apply(Object[] objects) throws Exception {
+//                Log.v(MainActivity.TAG, "getComments/ apply; objects' size: " + objects.length);
+//                List<Comment> list = new ArrayList<>(objects.length);
+//                for(Object o : objects)
+//                    list.add((Comment) o);
+//                return list;
+//            }
+//        });
+//        observable.subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Observer<List<Comment>>() {
+//                    @Override
+//                    public void onSubscribe(Disposable d) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onNext(List<Comment> comments) {
+//                        data.setValue(comments);
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        Log.v(MainActivity.TAG, Log.getStackTraceString(e));
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//
+//                    }
+//                });
         return data;
     }
 
