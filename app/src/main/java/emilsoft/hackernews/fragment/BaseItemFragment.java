@@ -179,41 +179,6 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     }
 
     protected void observeComments(List<Long> ids) {
-//        List<Long> newKidsIds = new ArrayList<>();
-//        itemViewModel.getLiveComments(ids, new io.reactivex.Observer<Comment>() {
-//            @Override
-//            public void onSubscribe(Disposable d) {
-//
-//            }
-//
-//            @Override
-//            public void onNext(Comment comment) {
-//                if(adapter != null)
-//                    adapter.addItem(comment);
-//                long[] kids = comment.getKids();
-//                if(kids != null) {
-//                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-//                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
-//                    else {
-//                        List<Long> temp = new ArrayList<>(kids.length);
-//                        for(long id : kids)
-//                            temp.add(id);
-//                        newKidsIds.addAll(temp);
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//
-//            }
-//
-//            @Override
-//            public void onComplete() {
-//                if(newKidsIds.size() > 0)
-//                    observeComments(newKidsIds);
-//            }
-//        });
         itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
             List<Long> newKidsIds = new ArrayList<>();
             for(Comment comment : comments) {

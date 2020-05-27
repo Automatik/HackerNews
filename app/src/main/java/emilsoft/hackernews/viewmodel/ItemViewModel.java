@@ -45,6 +45,4 @@ public class ItemViewModel extends ViewModel {
 
     public LiveData<Comment> getComment(long id) { return repository.getComment(id); }
 
-    public void getLiveComments(List<Long> ids, Observer<Comment> observer) { repository.getLiveComments(ids, observer); }
-
 }

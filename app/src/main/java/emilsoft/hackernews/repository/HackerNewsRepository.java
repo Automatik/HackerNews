@@ -194,6 +194,13 @@ public class HackerNewsRepository {
 
     public LiveData<List<? extends Item>> getItems(List<Long> ids) {
         final MutableLiveData<List<? extends Item>> data = new MutableLiveData<>();
+//        Observable.fromIterable(ids)
+//                .flatMap((id) -> hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()))
+//                .toList()
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe();
+
         List<Observable<? extends Item>> observables = new ArrayList<>(ids.size());
         for (Long id : ids) {
             observables.add(hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()));
@@ -296,44 +303,14 @@ public class HackerNewsRepository {
         return data;
     }
 
-    public void getLiveComments(List<Long> ids, Observer<Comment> observer) {
-        Observable.fromIterable(ids)
-                .flatMap((id) -> hackerNewsApi.getComment(id))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(observer);
-    }
-
     public LiveData<List<Comment>> getComments(List<Long> ids) {
-        final List<Comment> commentList = new ArrayList<>(ids.size());
         final MutableLiveData<List<Comment>> data = new MutableLiveData<>();
         Observable.fromIterable(ids)
+                // use concatMap if we want to preserve order instead
                 .flatMap((id) -> hackerNewsApi.getComment(id).subscribeOn(Schedulers.io()))
                 .subscribeOn(Schedulers.io())
                 .toList()
                 .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(new Observer<Comment>() {
-//                    @Override
-//                    public void onSubscribe(Disposable d) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onNext(Comment comment) {
-//                        commentList.add(comment);
-//                        data.postValue(commentList);
-//                    }
-//
-//                    @Override
-//                    public void onError(Throwable e) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onComplete() {
-//
-//                    }
-//                });
                 .subscribe(new SingleObserver<List<Comment>>() {
                     @Override
                     public void onSubscribe(Disposable d) {

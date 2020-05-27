@@ -1,5 +1,6 @@
 package emilsoft.hackernews.adapter;
 
+import android.annotation.SuppressLint;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -14,6 +15,11 @@ import emilsoft.hackernews.BuildConfig;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.MultiLevelData;
 import emilsoft.hackernews.api.RecyclerViewItem;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 
 public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelViewHolder>
         extends RecyclerView.Adapter<VH> {
@@ -54,34 +60,37 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
 
     protected final CollapseItemsListener collapseCommentListener = new CollapseItemsListener() {
 
+        @SuppressLint("CheckResult")
         @Override
         public void onCollapse(RecyclerViewItem item) {
             final int index = items.indexOf(item);
             final int level = item.getLevel();
             if(index == -1) return;
             int i = index + 1;
-//            final List<Comment> childs = new LinkedList<>();
-//            Observable.fromIterable(commentsList.subList(i, commentsList.size()))
-//                    .takeWhile(c -> c.getLevel() > level)
-//                    .toList()
-//                    .subscribe(comments -> {
-//                        childs.addAll(comments);
-//                        commentsList.subList(index + 1, index + 1 + childs.size()).clear();
-//                        notifyItemRangeRemoved(index + 1, childs.size());
-//                        collapsedComments.put(comment.getId(), childs);
-//                    })
-//                    .dispose();
+            Observable.fromIterable(items.subList(i, items.size()))
+                    .takeWhile(c -> c.getLevel() > level)
+                    .toList()
+                    .subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread())//just a precaution for memory leak
+                    .subscribe(children -> {
+                        items.subList(index + 1, index + 1 + children.size()).clear();
+                        notifyItemRangeRemoved(index + 1, children.size());
+                        collapsedParents.put(item.getId(), children);
+                    });
+
             //Without using RxJava
 
-            List<RecyclerViewItem> children = new ArrayList<>();
-            RecyclerViewItem temp;
-            while (i < items.size() && (temp = items.get(i)).getLevel() > level) {
-                children.add(temp);
-                i++;
-            }
-            items.subList(index + 1, index + 1 + children.size()).clear();
-            notifyItemRangeRemoved(index + 1, children.size());
-            collapsedParents.put(item.getId(), children);
+//            List<RecyclerViewItem> children = new ArrayList<>();
+//            RecyclerViewItem temp;
+//            while (i < items.size() && (temp = items.get(i)).getLevel() > level) {
+//                children.add(temp);
+//                i++;
+//            }
+//            items.subList(index + 1, index + 1 + children.size()).clear();
+//            notifyItemRangeRemoved(index + 1, children.size());
+//            collapsedParents.put(item.getId(), children);
+
+            //non va messo
 //            collapsedChildren.put(item.getId(), item.getId());
         }
 
@@ -99,23 +108,28 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
         }
     };
 
-    public final void addItem2(RecyclerViewItem item) {
+    public final void addItem(RecyclerViewItem item) {
         long idParent = item.getParent();
         List<RecyclerViewItem> parentChildren = collapsedParents.get(idParent);
         if(parentChildren != null) {
+            //This item is collapsed
+            List<RecyclerViewItem> children = collapsedParents.get(item.getId());
+            if(children != null)
+                //This item has children collapsed
+                children.clear();
             Long idCollapsedParent = collapsedChildren.get(idParent);
             if(idCollapsedParent != null) {
                 List<RecyclerViewItem> parentParentChildren = collapsedParents.get(idCollapsedParent);
                 if(parentParentChildren != null) {
                     // This item is child of a collapsed parent
-                    collapsedChildren.put(item.getId(), idCollapsedParent);
+                    collapsedChildren.put(item.getId(), idParent); //idCollapsedParent wrong
                     int index = indexOf(parentParentChildren, idParent);
                     if(index > -1) {
                         RecyclerViewItem parent = parentParentChildren.get(index);
                         item.setLevel(parent.getLevel() + 1);
 //                            parentChildren.add(index + 1, item); //This produces indexOutOfBoundsException
                         parentChildren.add(item);
-//                            collapsedParents.put(idCollapsedParent, parentParentChildren);
+                        //append(items, item, index + 1);
                         collapsedParents.put(idParent, parentChildren);
                     } else {
                         index = indexOf(items, idParent);
@@ -124,6 +138,7 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
                         RecyclerViewItem parent = items.get(index);
                         item.setLevel(parent.getLevel() + 1);
                         parentChildren.add(item);
+//                        append(parentChildren, item, index + 1);
                         collapsedParents.put(idParent, parentChildren);
                     }
                 } else {
@@ -157,6 +172,7 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
                             RecyclerViewItem parent = parentParentChildren.get(index);
                             item.setLevel(parent.getLevel() + 1);
                             parentParentChildren.add(index + 1, item);
+                            //append(parentParentChildren, item, index + 1);
                         } else {
                             if(BuildConfig.DEBUG) {
                                 throw new AssertionError("index is -1, shouldn't be because the parent is child of a collapsed parent");
@@ -179,7 +195,7 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
         }
     }
 
-    public final void addItem(RecyclerViewItem item) {
+    public final void addItemOld(RecyclerViewItem item) {
         // Is this item a collapsed parent ?
         List<RecyclerViewItem> children = collapsedParents.get(item.getId());
         if(children != null) {
@@ -311,19 +327,26 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
         }
         int indexToInsert = index + 1;
         if(!items.contains(item) && indexToInsert > -1) {
-            if(indexToInsert > items.size())
-                items.add(item);
-            else
-                items.add(indexToInsert, item);
+//            if(indexToInsert > items.size())
+//                items.add(item);
+//            else
+//                items.add(indexToInsert, item);
+            append(items, item, indexToInsert);
             notifyItemInserted(indexToInsert);
         }
     }
 
-    final private static int indexOf(List<RecyclerViewItem> items, long id) {
+    private static int indexOf(List<RecyclerViewItem> items, long id) {
         int index = 0;
         while(index < items.size() && items.get(index).getId() != id)
             index++;
         return (index >= items.size()) ? -1 : index;
+    }
+
+    private static void append(List<RecyclerViewItem> items, RecyclerViewItem item, int index) {
+        int size = items.size();
+        int i = (index < 0 || index > size) ? size : index;
+        items.add(i, item);
     }
 
     public static class MultiLevelViewHolder extends RecyclerView.ViewHolder {
