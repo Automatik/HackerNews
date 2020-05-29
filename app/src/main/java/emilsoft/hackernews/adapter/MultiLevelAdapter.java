@@ -67,28 +67,30 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
             final int level = item.getLevel();
             if(index == -1) return;
             int i = index + 1;
-            Observable.fromIterable(items.subList(i, items.size()))
-                    .takeWhile(c -> c.getLevel() > level)
-                    .toList()
-                    .subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread())//just a precaution for memory leak
-                    .subscribe(children -> {
-                        items.subList(index + 1, index + 1 + children.size()).clear();
-                        notifyItemRangeRemoved(index + 1, children.size());
-                        collapsedParents.put(item.getId(), children);
-                    });
+
+            //it's buggy, sometimes it  throws AssertionError("parentParentChildren is null") on line 184
+//            Observable.fromIterable(items.subList(i, items.size()))
+//                    .takeWhile(c -> c.getLevel() > level)
+//                    .toList()
+//                    .subscribeOn(Schedulers.newThread())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(children -> {
+//                        items.subList(index + 1, index + 1 + children.size()).clear();
+//                        notifyItemRangeRemoved(index + 1, children.size());
+//                        collapsedParents.put(item.getId(), children);
+//                    });
 
             //Without using RxJava
 
-//            List<RecyclerViewItem> children = new ArrayList<>();
-//            RecyclerViewItem temp;
-//            while (i < items.size() && (temp = items.get(i)).getLevel() > level) {
-//                children.add(temp);
-//                i++;
-//            }
-//            items.subList(index + 1, index + 1 + children.size()).clear();
-//            notifyItemRangeRemoved(index + 1, children.size());
-//            collapsedParents.put(item.getId(), children);
+            List<RecyclerViewItem> children = new ArrayList<>();
+            RecyclerViewItem temp;
+            while (i < items.size() && (temp = items.get(i)).getLevel() > level) {
+                children.add(temp);
+                i++;
+            }
+            items.subList(index + 1, index + 1 + children.size()).clear();
+            notifyItemRangeRemoved(index + 1, children.size());
+            collapsedParents.put(item.getId(), children);
 
             //non va messo
 //            collapsedChildren.put(item.getId(), item.getId());

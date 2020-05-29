@@ -166,14 +166,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     protected void startObservingComments(long[] kids) {
         if(kids == null || kids.length == 0)
             return;
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            observeComments(LongStream.of(kids).boxed().collect(Collectors.toList()));
-        else {
-            List<Long> ids = new ArrayList<>(kids.length);
-            for(long id : kids)
-                ids.add(id);
-            observeComments(ids);
-        }
+        observeComments(LongStream.of(kids).boxed().collect(Collectors.toList()));
         if(swipeRefreshLayout != null)
             swipeRefreshLayout.setRefreshing(false);
     }
@@ -188,14 +181,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
 
                 long[] kids = comment.getKids();
                 if(kids != null) {
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
-                    else {
-                        List<Long> temp = new ArrayList<>(kids.length);
-                        for(long id : kids)
-                            temp.add(id);
-                        newKidsIds.addAll(temp);
-                    }
+                    newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
                 }
             }
             if(newKidsIds.size() > 0)
@@ -334,14 +320,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
                 }
                 long[] kids = comment.getKids();
                 if(kids != null) {
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
-                    else {
-                        List<Long> temp = new ArrayList<>(kids.length);
-                        for(long id : kids)
-                            temp.add(id);
-                        newKidsIds.addAll(temp);
-                    }
+                    newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
                 }
             }
             if(newKidsIds.size() > 0)
