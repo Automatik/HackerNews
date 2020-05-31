@@ -1,6 +1,7 @@
 package emilsoft.hackernews.adapter;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -10,15 +11,27 @@ import androidx.viewbinding.ViewBinding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.OptionalInt;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import emilsoft.hackernews.BuildConfig;
+import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.MultiLevelData;
 import emilsoft.hackernews.api.RecyclerViewItem;
+import io.reactivex.Completable;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableSource;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
 public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelViewHolder>
@@ -45,7 +58,8 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
     @Override
     public final void onBindViewHolder(@NonNull VH holder, int position) {
         RecyclerViewItem item = items.get(position);
-        boolean isItemCollapsed = collapsedParents.containsKey(item.getId());
+//        boolean isItemCollapsed = collapsedParents.containsKey(item.getId());
+        boolean isItemCollapsed = item.isCollapsed();
         onBindViewHolder(holder, position, item, isItemCollapsed);
     }
 
@@ -86,29 +100,134 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
             RecyclerViewItem temp;
             while (i < items.size() && (temp = items.get(i)).getLevel() > level) {
                 children.add(temp);
+                if(temp.hasChildren()) // already collapsed items, not currently contained in items
+                    children.addAll(temp.getChildren());
                 i++;
             }
-            items.subList(index + 1, index + 1 + children.size()).clear();
-            notifyItemRangeRemoved(index + 1, children.size());
-            collapsedParents.put(item.getId(), children);
-
-            //non va messo
-//            collapsedChildren.put(item.getId(), item.getId());
+            items.subList(index + 1, i).clear();
+            notifyItemRangeRemoved(index + 1, i - (index + 1));
+            item.setChildren(children);
         }
 
         @Override
         public void onExpand(RecyclerViewItem item) {
-            long id = item.getId();
             int index = items.indexOf(item);
             if(index == -1) return;
-            List<RecyclerViewItem> children = collapsedParents.get(id);
-            if(children == null) return;
-            items.addAll(index + 1, children);
-            notifyItemRangeInserted(index + 1, children.size());
-            collapsedParents.remove(id);
-            collapsedChildren.remove(id);
+            if(item.hasChildren()) {
+                List<RecyclerViewItem> children = item.getChildren();
+                item.setChildren(null);
+                // Remove children of collapsed comments
+                children.removeIf(c -> c.getParentInstance().hasChildren());
+
+                items.addAll(index + 1, children);
+                notifyItemRangeInserted(index + 1, children.size());
+            }
         }
     };
+
+    @SuppressLint("CheckResult")
+    public final void addItem2(RecyclerViewItem item) {
+        long idParent = item.getParent();
+        int itemIndex = items.indexOf(item);
+        if(itemIndex != -1) {
+            //The comment is visible and items contains item
+            update(items, item, itemIndex);
+            final RecyclerViewItem parent = new Comment(idParent);
+            int index = items.indexOf(parent);
+            if(index != -1) {
+                RecyclerViewItem parentInstance = items.get(index);
+                item.setParentInstance(parentInstance);
+                addCommentToList(item);
+            } else {
+                //it's a top-comment
+                addCommentToList(item);
+            }
+        } else {
+            //This is a new fresh comment or a collapsed comment
+            final RecyclerViewItem parent = new Comment(idParent);
+            int index = items.indexOf(parent);
+            if(index != -1) {
+                RecyclerViewItem parentInstance = items.get(index);
+                item.setParentInstance(parentInstance);
+                if(parentInstance.isCollapsed()) {
+                    // the comment is collapsed but the parent is not
+                    if (!parentInstance.hasChildren()) {
+                        Log.v(MainActivity.TAG, "parentInstance.hasChildren = false");
+                        parentInstance.setChildren(new ArrayList<>());
+                    }
+                    parentInstance.getChildren().add(item); //or update old item?
+                } else {
+                    // the comment is not collapsed and it's child of another comment
+                    addCommentToList(item);
+                }
+            } else {
+                // it's a fresh new comment or the parent is also collapsed
+
+                //                RecyclerViewItem visibleComment = items.stream()
+//                        .filter((visComment -> visComment.hasChildren() && visComment.getChildren().contains(parent)))
+//                        .findFirst()
+//                        .orElse(null);
+
+//                Observable.fromIterable(items).forEachWhile(visibleComments -> {
+//                    int i;
+//                    if(visibleComments.hasChildren() && (i = visibleComments.getChildren().indexOf(parent)) != -1) {
+//                        RecyclerViewItem parentInstance = visibleComments.getChildren().get(i);
+//                        item.setParentInstance(parentInstance);
+//                        if(parentInstance.isCollapsed()) {
+//                            // parent has collapsed children
+//                            if(!parentInstance.hasChildren())
+//                                parentInstance.setChildren(new ArrayList<>());
+//                            parentInstance.getChildren().add(item);
+//                        } else {
+//                            // parent has not collapsed children
+//                            visibleComments.getChildren().add(i + 1, item);
+//                        }
+//                        return false;
+//                    }
+//                    return true;
+//                });
+
+                int parentIndex = -1;
+                int visibleCommentIndex = 0;
+                boolean parentFound = false;
+                while(visibleCommentIndex < items.size() && !parentFound) {
+                    RecyclerViewItem visibleComment = items.get(visibleCommentIndex);
+                    if(visibleComment.hasChildren() && (parentIndex = visibleComment.getChildren().indexOf(parent)) != -1)
+                        parentFound = true;
+                    visibleCommentIndex++;
+                }
+                if(parentFound) {
+                    RecyclerViewItem visibleComment = items.get(visibleCommentIndex - 1);
+                    RecyclerViewItem parentInstance = visibleComment.getChildren().get(parentIndex);
+                    item.setParentInstance(parentInstance);
+                    if(parentInstance.isCollapsed()) {
+                        // parent has collapsed children
+                        if(!parentInstance.hasChildren())
+                            parentInstance.setChildren(new ArrayList<>());
+                        parentInstance.getChildren().add(item);
+                    } else {
+                        // parent has not collapsed children
+                        Log.v(MainActivity.TAG, "parent has not collapsed children but the parent should be collapsed here");
+                    }
+                    visibleComment.getChildren().add(parentIndex + 1, item); // maintain coherency with onCollapse
+                } else {
+                    // it's a fresh new top comment (doesn't have a parent and is not contained in items)
+                    addCommentToList(item);
+                }
+            }
+        }
+    }
+
+    private static void update(List<RecyclerViewItem> items, RecyclerViewItem item) {
+        int index = items.indexOf(item);
+        if(index == -1) return;
+        update(items, item, index);
+    }
+
+    private static void update(List<RecyclerViewItem> items, RecyclerViewItem item, int index) {
+        RecyclerViewItem oldItem = items.get(index);
+        item.setIsCollapsed(oldItem.isCollapsed());
+    }
 
     public final void addItem(RecyclerViewItem item) {
         long idParent = item.getParent();
@@ -148,8 +267,9 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
                     // must be removed from collapsedChildren
                     collapsedChildren.remove(idParent);
                     //if (BuildConfig.DEBUG && !itemViewModel.commentsList.contains(new Comment(idParent)))
-                    if(BuildConfig.DEBUG)
-                        throw new AssertionError("addItems/ collapsed parent is now expanded");
+//                    if(BuildConfig.DEBUG)
+//                        throw new AssertionError("addItems/ collapsed parent is now expanded");
+                    Log.v(MainActivity.TAG, "parentParentChildren is null and collapsed parent is now expanded");
                     addCommentToList(item);
                 }
             } else {
@@ -181,9 +301,12 @@ public abstract class MultiLevelAdapter<VH extends MultiLevelAdapter.MultiLevelV
                             }
                         }
                     } else {
-                        if(BuildConfig.DEBUG) {
-                            throw new AssertionError("parentParentChildren is null");
-                        }
+                        collapsedChildren.remove(idParent);
+                        Log.v(MainActivity.TAG, "parentParentChildren is null");
+                        addCommentToList(item);
+//                        if(BuildConfig.DEBUG) {
+//                            throw new AssertionError("parentParentChildren is null");
+//                        }
                     }
                 } else {
                     // This item is collapsed (it's a top parent level 0) but it's not a child of no other collapsed parent

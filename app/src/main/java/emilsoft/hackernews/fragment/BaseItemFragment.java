@@ -177,7 +177,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
             for(Comment comment : comments) {
 
                 if(adapter != null)
-                    adapter.addItem(comment);
+                    adapter.addItem2(comment);
 
                 long[] kids = comment.getKids();
                 if(kids != null) {

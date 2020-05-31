@@ -3,6 +3,9 @@ package emilsoft.hackernews.api;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Comment extends Item implements RecyclerViewItem {
 
     public static final Parcelable.Creator<Comment> CREATOR = new Parcelable.Creator<Comment>() {
@@ -61,6 +64,40 @@ public class Comment extends Item implements RecyclerViewItem {
     // Add after implementing Expandable RecyclerView
 
     boolean isCollapsed;
+
+    RecyclerViewItem parentInstance;
+
+    List<RecyclerViewItem> children;
+
+    @Override
+    public boolean hasChildren() {
+        return children != null;
+    }
+
+    @Override
+    public void setChildren(List<RecyclerViewItem> children) {
+        this.children = children;
+    }
+
+    @Override
+    public List<RecyclerViewItem> getChildren() {
+        return children;
+    }
+
+    @Override
+    public boolean hasParent() {
+        return parentInstance != null;
+    }
+
+    @Override
+    public void setParentInstance(RecyclerViewItem parent) {
+        this.parentInstance = parent;
+    }
+
+    @Override
+    public RecyclerViewItem getParentInstance() {
+        return this.parentInstance;
+    }
 
     public long[] getKids() {
         return kids;
