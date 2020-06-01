@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
+import java.util.List;
+
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Comment;
@@ -20,14 +22,14 @@ import emilsoft.hackernews.api.MultiLevelData;
 import emilsoft.hackernews.api.RecyclerViewItem;
 import emilsoft.hackernews.databinding.CommentsListItemBinding;
 
-public class MultiCommentsAdapter extends MultiLevelAdapter<MultiCommentsAdapter.ViewHolder> {
+public class MultiCommentsAdapter extends MultiLevelAdapter<Comment, MultiCommentsAdapter.ViewHolder> {
 
     private int[] colorCodes;
     private int levelStartMargin;
     private Context context;
 
-    public MultiCommentsAdapter(MultiLevelData data) {
-        super(data);
+    public MultiCommentsAdapter(List<Comment> comments) {
+        super(comments);
     }
 
     @NonNull
@@ -41,9 +43,9 @@ public class MultiCommentsAdapter extends MultiLevelAdapter<MultiCommentsAdapter
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position, RecyclerViewItem item, boolean isItemCollapsed) {
-        holder.mComment = (Comment) item;
-        holder.mComment.setIsCollapsed(isItemCollapsed);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position, Comment item) {
+        holder.mComment = item;
+        holder.mComment.setIsCollapsed(item.isCollapsed());
 //        holder.isCollapsed = holder.mComment.isCollapsed();
         holder.mTime.setText(Utils.getAbbreviatedTimeSpan(holder.mComment.getTime()));
 
@@ -117,7 +119,7 @@ public class MultiCommentsAdapter extends MultiLevelAdapter<MultiCommentsAdapter
         return (colorCodes != null) ? colorCodes[level % colorCodes.length] : 0;
     }
 
-    static class ViewHolder extends MultiLevelAdapter.MultiLevelViewHolder {
+    static class ViewHolder extends MultiLevelAdapter.MultiLevelViewHolder<Comment> {
 
         final CommentsListItemBinding mBinding;
         final TextView mTime;
@@ -128,7 +130,7 @@ public class MultiCommentsAdapter extends MultiLevelAdapter<MultiCommentsAdapter
         final ImageView mCollapseIcon;
         Comment mComment;
 
-        public ViewHolder(@NonNull CommentsListItemBinding binding, MultiLevelAdapter.CollapseItemsListener listener) {
+        public ViewHolder(@NonNull CommentsListItemBinding binding, MultiLevelAdapter.CollapseItemsListener<Comment> listener) {
             super(binding, listener);
             mBinding = binding;
             mLevel = binding.commentLevel;

@@ -108,8 +108,8 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
         super.onViewCreated(view, savedInstanceState);
 //        adapter = new CommentsAdapter(itemViewModel.commentsList,
 //                itemViewModel.collapsedParentComments, itemViewModel.collapsedChildren);
-//        adapter = new MultiLevelCommentsAdapter(itemViewModel.commentsList);
-        adapter = new MultiCommentsAdapter(itemViewModel.multiLevelData);
+        adapter = new MultiCommentsAdapter(itemViewModel.commentsList);
+//        adapter = new MultiCommentsAdapter(itemViewModel.multiLevelData);
         recyclerView.setAdapter(adapter);
         observeItem(false);
     }
@@ -177,7 +177,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
             for(Comment comment : comments) {
 
                 if(adapter != null)
-                    adapter.addItem2(comment);
+                    adapter.addItem3(comment);
 
                 long[] kids = comment.getKids();
                 if(kids != null) {

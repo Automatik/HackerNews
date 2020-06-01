@@ -20,8 +20,8 @@ public class ItemViewModel extends ViewModel {
 
     public HashMap<Long, List<Comment>> collapsedParentComments; //id comment on which was clicked Collapse and List of its children
     public HashMap<Long, Long> collapsedChildren; //id comment and id of the collapsed parent indexable in collapsedParentComments
-    public LinkedList<Comment> commentsList;
-    public MultiLevelData multiLevelData;
+    public LinkedList<Comment> commentsList; // TODO Su internet suggeriscono per gli adapter di usare arraylist con fast random access invece di linked list, dato che l'adapter chiama get() tante volte per ciascun oggetto
+//    public MultiLevelData multiLevelData;
     private HackerNewsRepository repository;
     public long lastCommentsRefreshTime = 0L;
     public boolean commentsFound = false;
@@ -29,8 +29,8 @@ public class ItemViewModel extends ViewModel {
 
     public ItemViewModel() {
         repository = HackerNewsRepository.getInstance();
-        multiLevelData = new MultiLevelData();
-//        commentsList = new LinkedList<>();
+//        multiLevelData = new MultiLevelData();
+        commentsList = new LinkedList<>();
 //        collapsedParentComments = new HashMap<>();
 //        collapsedChildren = new HashMap<>();
     }

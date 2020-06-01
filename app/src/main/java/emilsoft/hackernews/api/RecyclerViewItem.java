@@ -3,7 +3,7 @@ package emilsoft.hackernews.api;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface RecyclerViewItem {
+public interface RecyclerViewItem<T> {
 
     int level = 0;
 
@@ -13,28 +13,28 @@ public interface RecyclerViewItem {
 
 //    RecyclerViewItem parentInstance = null;
 
-    public boolean hasChildren();
+    boolean hasChildren();
 
-    public void setChildren(List<RecyclerViewItem> children);
+    void setChildren(List<T> children);
 
-    public List<RecyclerViewItem> getChildren();
+    List<T> getChildren();
 
-    public boolean hasParent();
+    boolean hasParent();
 
-    public void setParentInstance(RecyclerViewItem parent);
+    void setParentInstance(T parent);
 
-    public RecyclerViewItem getParentInstance();
+    T getParentInstance();
 
-    public long getId();
+    long getId();
 
-    public long getParent();
+    long getParent();
 
-    public void setLevel(int level);
+    void setLevel(int level);
 
-    public int getLevel();
+    int getLevel();
 
-    public void setIsCollapsed(boolean isCollapsed);
+    void setIsCollapsed(boolean isCollapsed);
 
-    public boolean isCollapsed();
+    boolean isCollapsed();
 
 }

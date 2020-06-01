@@ -6,7 +6,9 @@ import android.os.Parcelable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Comment extends Item implements RecyclerViewItem {
+import io.reactivex.Completable;
+
+public class Comment extends Item implements RecyclerViewItem<Comment> {
 
     public static final Parcelable.Creator<Comment> CREATOR = new Parcelable.Creator<Comment>() {
 
@@ -65,9 +67,9 @@ public class Comment extends Item implements RecyclerViewItem {
 
     boolean isCollapsed;
 
-    RecyclerViewItem parentInstance;
+    Comment parentInstance;
 
-    List<RecyclerViewItem> children;
+    List<Comment> children;
 
     @Override
     public boolean hasChildren() {
@@ -75,12 +77,12 @@ public class Comment extends Item implements RecyclerViewItem {
     }
 
     @Override
-    public void setChildren(List<RecyclerViewItem> children) {
+    public void setChildren(List<Comment> children) {
         this.children = children;
     }
 
     @Override
-    public List<RecyclerViewItem> getChildren() {
+    public List<Comment> getChildren() {
         return children;
     }
 
@@ -90,12 +92,12 @@ public class Comment extends Item implements RecyclerViewItem {
     }
 
     @Override
-    public void setParentInstance(RecyclerViewItem parent) {
+    public void setParentInstance(Comment parent) {
         this.parentInstance = parent;
     }
 
     @Override
-    public RecyclerViewItem getParentInstance() {
+    public Comment getParentInstance() {
         return this.parentInstance;
     }
 
