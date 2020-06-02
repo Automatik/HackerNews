@@ -147,6 +147,12 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
         }
     }
 
+    @Override
+    public void onDestroy() {
+        adapter.dispose();
+        super.onDestroy();
+    }
+
     protected abstract void preFetchUrl();
 
     protected void observeItem(final boolean refreshComments) {
@@ -176,9 +182,14 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
             List<Long> newKidsIds = new ArrayList<>();
             for(Comment comment : comments) {
 
+                // this null check should prevent the following error when rotating the phone
+                // while downloading comments
+                // Attempt to invoke virtual method 'long[] emilsoft.hackernews.api.Comment.getKids()' on a null object reference
+                if(comment == null)
+                    return;
+
                 if(adapter != null)
                     adapter.addItem3(comment);
-
                 long[] kids = comment.getKids();
                 if(kids != null) {
                     newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));

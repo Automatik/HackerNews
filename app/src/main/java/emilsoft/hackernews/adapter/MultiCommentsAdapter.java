@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
@@ -122,6 +123,7 @@ public class MultiCommentsAdapter extends MultiLevelAdapter<Comment, MultiCommen
     static class ViewHolder extends MultiLevelAdapter.MultiLevelViewHolder<Comment> {
 
         final CommentsListItemBinding mBinding;
+        final ConstraintLayout mCollapseLayout;
         final TextView mTime;
         final TextView mUser;
         final TextView mText;
@@ -137,6 +139,7 @@ public class MultiCommentsAdapter extends MultiLevelAdapter<Comment, MultiCommen
             mTime = binding.commentTime;
             mUser = binding.commentUser;
             mText = binding.commentText;
+            mCollapseLayout = binding.commentExpandLayout;
             mCollapseText = binding.commentExpandText;
             mCollapseIcon = binding.commentExpandImageview;
             View.OnClickListener collapseIconClickListener = v -> {
@@ -153,8 +156,9 @@ public class MultiCommentsAdapter extends MultiLevelAdapter<Comment, MultiCommen
                 }
                 mComment.setIsCollapsed(!mComment.isCollapsed());
             };
-            mCollapseText.setOnClickListener(collapseIconClickListener);
-            mCollapseIcon.setOnClickListener(collapseIconClickListener);
+//            mCollapseText.setOnClickListener(collapseIconClickListener);
+//            mCollapseIcon.setOnClickListener(collapseIconClickListener);
+            mCollapseLayout.setOnClickListener(collapseIconClickListener);
         }
     }
 }
