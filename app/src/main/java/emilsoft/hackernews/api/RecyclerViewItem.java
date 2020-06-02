@@ -9,10 +9,6 @@ public interface RecyclerViewItem<T> {
 
     boolean isCollapsed = false;
 
-//    List<RecyclerViewItem> children = new ArrayList<>();
-
-//    RecyclerViewItem parentInstance = null;
-
     boolean hasChildren();
 
     void setChildren(List<T> children);

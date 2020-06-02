@@ -156,8 +156,6 @@ public class MultiCommentsAdapter extends MultiLevelAdapter<Comment, MultiCommen
                 }
                 mComment.setIsCollapsed(!mComment.isCollapsed());
             };
-//            mCollapseText.setOnClickListener(collapseIconClickListener);
-//            mCollapseIcon.setOnClickListener(collapseIconClickListener);
             mCollapseLayout.setOnClickListener(collapseIconClickListener);
         }
     }

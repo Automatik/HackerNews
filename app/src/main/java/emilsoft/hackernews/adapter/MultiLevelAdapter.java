@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -30,6 +29,7 @@ import io.reactivex.CompletableObserver;
 import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.CompletableSource;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleObserver;
@@ -38,6 +38,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
@@ -79,21 +80,6 @@ public abstract class MultiLevelAdapter<T extends RecyclerViewItem<T>, VH extend
             if(index == -1) return;
             int i = index + 1;
 
-            //it's buggy, sometimes it  throws AssertionError("parentParentChildren is null") on line 184
-//            Observable.fromIterable(items.subList(i, items.size()))
-//                    .takeWhile(c -> c.getLevel() > level)
-//                    .toList()
-//                    .subscribeOn(Schedulers.newThread())
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe(children -> {
-//                        items.subList(index + 1, index + 1 + children.size()).clear();
-//                        notifyItemRangeRemoved(index + 1, children.size());
-//                        collapsedParents.put(item.getId(), children);
-//                    });
-
-            //Without using RxJava
-
-
             List<T> children = new ArrayList<>();
             T temp;
             while (i < items.size() && (temp = items.get(i)).getLevel() > level) {
@@ -134,12 +120,11 @@ public abstract class MultiLevelAdapter<T extends RecyclerViewItem<T>, VH extend
     }
 
     @SuppressLint("CheckResult")
-    public final void addItem3(T item) {
+    public final void addItem(T item) {
         Single.create((SingleOnSubscribe<Optional<T>>) emitter -> {
             long idParent = item.getParent();
             int itemIndex = items.indexOf(item);
 
-//                final RecyclerViewItem parent = new T(idParent);
             int index = indexOf(items, idParent);
             if(itemIndex != -1) {
                 //The comment is visible and items contains item
@@ -222,6 +207,7 @@ public abstract class MultiLevelAdapter<T extends RecyclerViewItem<T>, VH extend
                             item.setLevel(parentInstance.getLevel() + 1);
                             visibleComment.getChildren().add(parentIndex + 1, item);
                         }
+                        //the comment is collapsed and so not visible
                         emitter.onSuccess(Optional.empty());
                     } else {
                         // it's a fresh new top comment (doesn't have a parent and is not contained in items)
@@ -238,107 +224,6 @@ public abstract class MultiLevelAdapter<T extends RecyclerViewItem<T>, VH extend
                 });
     }
 
-//    @SuppressLint("CheckResult")
-//    public final void addItem2(RecyclerViewItem item) {
-//        Log.v(MainActivity.TAG, "Thread: " + Thread.currentThread().getName());
-//        long idParent = item.getParent();
-//        int itemIndex = items.indexOf(item);
-//        final RecyclerViewItem parent = new Comment(idParent);
-//        int index = items.indexOf(parent);
-//        if(itemIndex != -1) {
-//            //The comment is visible and items contains item
-//            update(items, item, itemIndex);
-//            if(index != -1) {
-//                RecyclerViewItem parentInstance = items.get(index);
-//                item.setParentInstance(parentInstance);
-//                addCommentToList(item);
-//            } else {
-//                //it's a top-comment
-//                addCommentToList(item);
-//            }
-//        } else {
-//            //This is a new fresh comment or a collapsed comment
-//            if(index != -1) {
-//                RecyclerViewItem parentInstance = items.get(index);
-//                item.setParentInstance(parentInstance);
-//                if(parentInstance.isCollapsed()) {
-//                    // the comment is collapsed but the parent is not
-//                    if (!parentInstance.hasChildren()) {
-//                        parentInstance.setChildren(new ArrayList<>());
-//                    }
-//                    int i = parentInstance.getChildren().indexOf(item);
-//                    if(i != -1) {
-//                        update(parentInstance.getChildren(), item, i);
-//                        parentInstance.getChildren().set(i, item);
-//                    } else {
-//                        item.setLevel(parentInstance.getLevel() + 1);
-//                        parentInstance.getChildren().add(item);
-//                    }
-//                } else {
-//                    // the comment is not collapsed and it's child of another comment
-//                    addCommentToList(item);
-//                }
-//            } else {
-//                // it's a fresh new comment or the parent is also collapsed
-////                        RecyclerViewItem visibleComment = items.stream()
-////                                .filter((visComment -> visComment.hasChildren() && visComment.getChildren().contains(parent)))
-////                                .findFirst()
-////                                .orElse(null);
-//
-//                int parentIndex = -1;
-//                int visibleCommentIndex = 0;
-//                boolean parentFound = false;
-//                while(visibleCommentIndex < items.size() && !parentFound) {
-//                    RecyclerViewItem visibleComment = items.get(visibleCommentIndex);
-//                    if(visibleComment.hasChildren() && (parentIndex = visibleComment.getChildren().indexOf(parent)) != -1)
-//                        parentFound = true;
-//                    visibleCommentIndex++;
-//                }
-//                if(parentFound) {
-//                    RecyclerViewItem visibleComment = items.get(visibleCommentIndex - 1);
-//                    RecyclerViewItem parentInstance = visibleComment.getChildren().get(parentIndex);
-//                    item.setParentInstance(parentInstance);
-//                    if(parentInstance.isCollapsed()) {
-//                        // parent has collapsed children
-//                        if(!parentInstance.hasChildren()) {
-//                            parentInstance.setChildren(new ArrayList<>());
-//                        }
-//                        int i = parentInstance.getChildren().indexOf(item);
-//                        if(i != -1) {
-//                            update(parentInstance.getChildren(), item, i);
-//                            parentInstance.getChildren().set(i, item);
-//                        } else {
-//                            item.setLevel(parentInstance.getLevel() + 1);
-//                            parentInstance.getChildren().add(item);
-//                        }
-//                    } else {
-//                        // parent has not collapsed children
-//                        // this else can be removed
-//                        Log.v(MainActivity.TAG, "parent has not collapsed children but one of the parent's parent is collapsed");
-//                    }
-//                    // maintain coherency with onCollapse
-//                    int i = visibleComment.getChildren().indexOf(item);
-//                    if(i != -1) {
-//                        update(visibleComment.getChildren(), item, i);
-//                        visibleComment.getChildren().set(i, item);
-//                    } else {
-//                        item.setLevel(parentInstance.getLevel() + 1);
-//                        visibleComment.getChildren().add(parentIndex + 1, item);
-//                    }
-//                } else {
-//                    // it's a fresh new top comment (doesn't have a parent and is not contained in items)
-//                    addCommentToList(item); //potrebbe evitare di fare indexOf nel metodo
-//                }
-//            }
-//        }
-//    }
-
-    private static <T extends RecyclerViewItem<T>> void update(List<T> items, T item) {
-        int index = items.indexOf(item);
-        if(index == -1) return;
-        update(items, item, index);
-    }
-
     private static <T extends RecyclerViewItem<T>> void update(List<T> items, T item, int index) {
         T oldItem = items.get(index);
         item.setLevel(oldItem.getLevel());
@@ -348,21 +233,18 @@ public abstract class MultiLevelAdapter<T extends RecyclerViewItem<T>, VH extend
 
     private void addCommentToList(T item) {
         int pos = items.size();
-        long idParent = item.getParent();
-        int index = indexOf(items, idParent);
-        if(index != -1) {
-            T parent = items.get(index);
+        int index;
+        T parent = item.getParentInstance();
+        if(parent != null) {
             item.setLevel(parent.getLevel() + 1);
+            index = items.indexOf(parent);
         } else {
+            //it's a top level comment
             item.setLevel(1);
             index = pos;
         }
         int indexToInsert = index + 1;
-        if(!items.contains(item) && indexToInsert > -1) {
-//            if(indexToInsert > items.size())
-//                items.add(item);
-//            else
-//                items.add(indexToInsert, item);
+        if(!items.contains(item)) {
             append(items, item, indexToInsert);
             notifyItemInserted(indexToInsert);
         }
