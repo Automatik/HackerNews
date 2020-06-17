@@ -172,7 +172,7 @@ public abstract class MultiLevelAdapter<T extends RecyclerViewItem<T>, VH extend
                     boolean parentFound = false;
                     while(visibleCommentIndex < items.size() && !parentFound) {
                         T visibleComment = items.get(visibleCommentIndex);
-                        if(visibleComment.hasChildren() && (parentIndex = indexOf(visibleComment.getChildren(), index)) != -1)
+                        if(visibleComment.hasChildren() && (parentIndex = indexOf(visibleComment.getChildren(), index)) != -1) //TODO Perché ad indexOf gli passo index? E non un id?
                             parentFound = true;
                         visibleCommentIndex++;
                     }
