@@ -16,6 +16,7 @@ import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.api.Type;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -194,52 +195,73 @@ public class HackerNewsRepository {
 
     public LiveData<List<? extends Item>> getItems(List<Long> ids) {
         final MutableLiveData<List<? extends Item>> data = new MutableLiveData<>();
-//        Observable.fromIterable(ids)
-//                .flatMap((id) -> hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()))
-//                .toList()
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe();
-
-        List<Observable<? extends Item>> observables = new ArrayList<>(ids.size());
-        for (Long id : ids) {
-            observables.add(hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()));
-        }
-        Observable<List<? extends Item>> observable = Observable.zip(observables, items -> {
-            List<Item> list = new ArrayList<>(items.length);
-            for(Object i : items) {
-                Item item = (Item) i;
-                switch (item.getType()) {
-                    case JOB_TYPE: list.add((Job) i); break;
-                    case STORY_TYPE:
-                    default: list.add((Story) i);
-                }
-            }
-            return list;
-        });
-        observable.subscribeOn(Schedulers.io())
+        Observable.fromIterable(ids)
+                .flatMap((id) -> hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()))
+                .map(item -> {
+                    switch (item.getType()) {
+                        case JOB_TYPE: return (Job) item;
+                        default: return item;
+                    }
+                })
+                .toList()
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<List<? extends Item>>() {
+                .subscribe(new SingleObserver<List<Item>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(List<? extends Item> items) {
+                    public void onSuccess(List<Item> items) {
                         data.setValue(items);
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
-                    }
-
-                    @Override
-                    public void onComplete() {
-
+                        Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ Log.getStackTraceString(e));
                     }
                 });
+
+//        List<Observable<? extends Item>> observables = new ArrayList<>(ids.size());
+//        for (Long id : ids) {
+//            observables.add(hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()));
+//        }
+//        Observable<List<? extends Item>> observable = Observable.zip(observables, items -> {
+//            List<Item> list = new ArrayList<>(items.length);
+//            for(Object i : items) {
+//                Item item = (Item) i;
+//                switch (item.getType()) {
+//                    case JOB_TYPE: list.add((Job) i); break;
+//                    case STORY_TYPE:
+//                    default: list.add((Story) i);
+//                }
+//            }
+//            return list;
+//        });
+//        observable.subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Observer<List<? extends Item>>() {
+//                    @Override
+//                    public void onSubscribe(Disposable d) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onNext(List<? extends Item> items) {
+//                        data.setValue(items);
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//
+//                    }
+//                });
         return data;
     }
 
