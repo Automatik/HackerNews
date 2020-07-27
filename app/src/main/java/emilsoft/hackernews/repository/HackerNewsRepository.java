@@ -14,6 +14,7 @@ import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.Job;
+import emilsoft.hackernews.api.RetrofitException;
 import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.api.Type;
@@ -25,6 +26,7 @@ import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.ResponseBody;
 
@@ -85,6 +87,8 @@ public class HackerNewsRepository {
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
+                        RetrofitException error = (RetrofitException) e;
+                        Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ error.getResponse());
                     }
 
                     @Override
@@ -220,6 +224,8 @@ public class HackerNewsRepository {
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ Log.getStackTraceString(e));
+                        RetrofitException error = (RetrofitException) e;
+                        Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ error.getResponse());
                     }
                 });
 
@@ -347,6 +353,8 @@ public class HackerNewsRepository {
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getComments/ "+ Log.getStackTraceString(e));
+                        RetrofitException error = (RetrofitException) e;
+                        Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ error.getResponse());
                     }
                 });
 

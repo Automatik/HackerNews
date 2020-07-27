@@ -23,4 +23,6 @@
     <string name="comment_collapse_text">Collapse</string>
     <string name="comment_expand_text">Expand</string>
     <string name="comment_expand_text_description">Comment Collapse or Expand Text</string>
+    <string name="offline_view_cloud_image_description">No connection available</string>
+    <string name="offline_view_text">No Connection Available</string>
 </resources>

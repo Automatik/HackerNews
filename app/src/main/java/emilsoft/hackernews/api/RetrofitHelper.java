@@ -17,7 +17,8 @@ public class RetrofitHelper {
                 .baseUrl(HackerNewsApi.BASE_URL)
 //                .addConverterFactory(GsonConverterFactory.create())
                 .addConverterFactory(createItemGsonConverter())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+//                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addCallAdapterFactory(RxErrorHandlingCallAdapterFactory.create())
                 .build();
     }
 

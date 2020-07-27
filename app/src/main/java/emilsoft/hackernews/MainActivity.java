@@ -23,19 +23,23 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.List;
 
+import emilsoft.hackernews.connectivity.ConnectivityProvider;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.ActivityMainBinding;
 import emilsoft.hackernews.fragment.HomeFragment;
 
-public class MainActivity extends AppCompatActivity implements CustomTabActivityHelper.LaunchUrlCallback{
+public class MainActivity extends AppCompatActivity implements CustomTabActivityHelper.LaunchUrlCallback,
+        ConnectivityProvider.ConnectivityStateListener {
 
     private AppBarConfiguration mAppBarConfiguration;
     private CustomTabActivityHelper customTabActivityHelper;
+    private ConnectivityProvider connectivityProvider;
     public static final String TAG = "Emil";
 
     @Override
@@ -52,7 +56,8 @@ public class MainActivity extends AppCompatActivity implements CustomTabActivity
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_topstories, R.id.nav_newstories, R.id.nav_beststories,
                 R.id.nav_showstories, R.id.nav_askstories, R.id.nav_jobstories)
-                .setDrawerLayout(drawer)
+                .setOpenableLayout(drawer)
+//                .setDrawerLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
@@ -60,6 +65,10 @@ public class MainActivity extends AppCompatActivity implements CustomTabActivity
 
         customTabActivityHelper = new CustomTabActivityHelper();
 //        customTabActivityHelper.setConnectionCallback(this);
+
+        connectivityProvider = ConnectivityProvider.createProvider(this);
+        // check could be made also here
+        //isStateConnected(connectivityProvider.getNetworkState());
     }
 
     @Override
@@ -81,12 +90,14 @@ public class MainActivity extends AppCompatActivity implements CustomTabActivity
     protected void onStart() {
         super.onStart();
         customTabActivityHelper.bindCustomTabsService(this);
+        connectivityProvider.addListener(this);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         customTabActivityHelper.unbindCustomTabsService(this);
+        connectivityProvider.removeListener(this);
     }
 
     @Override
@@ -102,4 +113,17 @@ public class MainActivity extends AppCompatActivity implements CustomTabActivity
             customTabActivityHelper.mayLaunchUrl(priorUri, null, otherLikelyBundles);
         }
     }
+
+//    @Override
+//    public void isConnected(boolean isConnected) {
+//        Log.v(TAG, "MainActivity/isConnected " + isConnected);
+//    }
+
+
+    @Override
+    public void onStateChange(ConnectivityProvider.NetworkState state) {
+        Log.v(TAG, "MainActivity/isConnected " + ConnectivityProvider.isStateConnected(state));
+    }
+
+
 }
