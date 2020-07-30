@@ -114,12 +114,6 @@ public class MainActivity extends AppCompatActivity implements CustomTabActivity
         }
     }
 
-//    @Override
-//    public void isConnected(boolean isConnected) {
-//        Log.v(TAG, "MainActivity/isConnected " + isConnected);
-//    }
-
-
     @Override
     public void onStateChange(ConnectivityProvider.NetworkState state) {
         Log.v(TAG, "MainActivity/isConnected " + ConnectivityProvider.isStateConnected(state));

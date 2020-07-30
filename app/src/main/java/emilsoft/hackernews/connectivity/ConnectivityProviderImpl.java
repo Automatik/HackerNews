@@ -52,14 +52,12 @@ public class ConnectivityProviderImpl extends ConnectivityProviderBaseImpl{
 
         @Override
         public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
-            Log.v(MainActivity.TAG, "onCapabilitiesChanged");
 //            provider.dispatchChange(networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET));
             provider.dispatchChange(new NetworkState.ConnectedState.Connected(networkCapabilities));
         }
 
         @Override
         public void onAvailable(@NonNull Network network) {
-            Log.v(MainActivity.TAG, "onAvailable");
             NetworkCapabilities capabilities = provider.connectivityManager.getNetworkCapabilities(network);
             if(capabilities != null)
 //                provider.dispatchChange(capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET));
@@ -68,7 +66,6 @@ public class ConnectivityProviderImpl extends ConnectivityProviderBaseImpl{
 
         @Override
         public void onLost(@NonNull Network network) {
-            Log.v(MainActivity.TAG, "onLost");
 //            provider.dispatchChange(false);
             provider.dispatchChange(new NetworkState.NotConnectedState());
         }

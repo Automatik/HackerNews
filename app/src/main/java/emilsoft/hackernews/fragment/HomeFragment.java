@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -16,20 +17,26 @@ import androidx.navigation.NavController;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.snackbar.Snackbar;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.adapter.StoriesAdapter;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.Type;
+import emilsoft.hackernews.connectivity.ConnectionSnackbar;
+import emilsoft.hackernews.connectivity.ConnectivityProvider;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentHomeBinding;
 import emilsoft.hackernews.viewmodel.HomeViewModel;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.api.Story;
 
-public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
+        ConnectivityProvider.ConnectivityStateListener {
 
     public static final int TOP_STORIES_VIEW = 0;
     public static final int BEST_STORIES_VIEW = 1;
@@ -44,9 +51,12 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
+    private ConstraintLayout offlineViewLayout;
     private StoriesAdapter adapter;
     private HomeViewModel homeViewModel;
     private CustomTabActivityHelper.LaunchUrlCallback launchUrlCallback;
+    private ConnectivityProvider connectivityProvider;
+    private boolean isConnected = false;
 
     public static HomeFragment newInstance(int argViewStories) {
         Bundle args = new Bundle();
@@ -60,6 +70,11 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+
+        if(getContext() != null) {
+            connectivityProvider = ConnectivityProvider.createProvider(getContext());
+            isConnected = ConnectivityProvider.isStateConnected(connectivityProvider.getNetworkState());
+        }
 
         Bundle args = getArguments();
         if(savedInstanceState != null)
@@ -80,6 +95,7 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         swipeRefreshLayout.setOnRefreshListener(this);
         swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.redA200);
         recyclerView.addOnScrollListener(onScrollListener);
+        offlineViewLayout = binding.articlesOfflineViewLayout.offlineViewLayout;
         return binding.getRoot();
     }
 
@@ -147,13 +163,27 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     };
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if(connectivityProvider != null)
+            connectivityProvider.addListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        if(connectivityProvider != null)
+            connectivityProvider.removeListener(this);
+        super.onPause();
+    }
+
+    @Override
     public void onRefresh() {
         refreshArticles();
     }
 
     private void refreshArticles() {
         long currentTime = System.currentTimeMillis();
-        if(currentTime - homeViewModel.lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
+        if(isConnected && currentTime - homeViewModel.lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
             homeViewModel.lastIdsRefreshTime = currentTime;
             homeViewModel.getItemsIds().observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
                 @Override
@@ -194,19 +224,18 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     private void observeItems(List<Long> ids) {
-        //homeViewModel.start2 = System.nanoTime();
-        homeViewModel.getItems(ids).observe(this, (items -> {
-            for(Item item : items) {
-                if(!homeViewModel.items.contains(item)) {
-                    int pos = homeViewModel.items.size();
-                    homeViewModel.items.add(item);
-                    if(adapter != null)
-                        adapter.notifyItemInserted(pos);
+        if(isConnected) {
+            homeViewModel.getItems(ids).observe(this, (items -> {
+                for(Item item : items) {
+                    if(!homeViewModel.items.contains(item)) {
+                        int pos = homeViewModel.items.size();
+                        homeViewModel.items.add(item);
+                        if(adapter != null)
+                            adapter.notifyItemInserted(pos);
+                    }
                 }
-            }
-            //homeViewModel.stop2 = System.nanoTime();
-            //Log.v(MainActivity.TAG, "getStories: " + (((homeViewModel.stop2-homeViewModel.start2)/(double)1000000))+ " ms");
-        }));
+            }));
+        }
     }
 
     /**
@@ -261,5 +290,22 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             default: return;
         }
         navController.navigate(navId, args);
+    }
+
+    @Override
+    public void onStateChange(ConnectivityProvider.NetworkState state) {
+        if(connectivityProvider != null) {
+            isConnected = ConnectivityProvider.isStateConnected(connectivityProvider.getNetworkState());
+            if (homeViewModel.items.isEmpty() && !isConnected) {
+                offlineViewLayout.setVisibility(View.VISIBLE);
+            }
+            if (!homeViewModel.items.isEmpty() && !isConnected) {
+                ConnectionSnackbar.showConnectionLostSnackbar(getView());
+            }
+            if (isConnected)
+                offlineViewLayout.setVisibility(View.INVISIBLE);
+            if (homeViewModel.items.isEmpty() && isConnected)
+                refreshArticles();
+        }
     }
 }

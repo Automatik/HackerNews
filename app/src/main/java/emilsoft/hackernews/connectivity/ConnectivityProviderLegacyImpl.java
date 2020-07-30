@@ -55,7 +55,6 @@ public class ConnectivityProviderLegacyImpl extends ConnectivityProviderBaseImpl
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.v(MainActivity.TAG, "onReceive");
             // on some devices ConnectivityManager.getActiveNetworkInfo() does not provide the correct network state
             // https://issuetracker.google.com/issues/37137911
             NetworkInfo networkInfo = provider.connectivityManager.getActiveNetworkInfo();

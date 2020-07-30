@@ -22,4 +22,8 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+    <include
+        android:id="@+id/articles_offline_view_layout"
+        layout="@layout/offline_view"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

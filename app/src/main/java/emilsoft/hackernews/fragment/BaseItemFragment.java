@@ -15,11 +15,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -35,6 +38,8 @@ import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.adapter.MultiCommentsAdapter;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.connectivity.ConnectionSnackbar;
+import emilsoft.hackernews.connectivity.ConnectivityProvider;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentItemBinding;
 import emilsoft.hackernews.viewmodel.ItemViewModel;
@@ -42,7 +47,8 @@ import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 
-public abstract class BaseItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
+public abstract class BaseItemFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
+        ConnectivityProvider.ConnectivityStateListener {
 
     public static final String ARG_ITEM = "argument_item";
 
@@ -51,16 +57,24 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     protected LinearLayout noCommentsLayout;
     protected SwipeRefreshLayout swipeRefreshLayout;
     protected RecyclerView recyclerView;
+    private ConstraintLayout offlineViewLayout;
 //    protected CommentsAdapter adapter;
     protected MultiCommentsAdapter adapter;
     protected ItemViewModel itemViewModel;
     protected CustomTabActivityHelper.LaunchUrlCallback launchUrlCallback;
+    private ConnectivityProvider connectivityProvider;
+    private boolean isConnected = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         itemViewModel = new ViewModelProvider(this).get(ItemViewModel.class);
+
+        if(getContext() != null) {
+            connectivityProvider = ConnectivityProvider.createProvider(getContext());
+            isConnected = ConnectivityProvider.isStateConnected(connectivityProvider.getNetworkState());
+        }
 
         Bundle args = getArguments();
         if(savedInstanceState != null)
@@ -84,9 +98,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
         swipeRefreshLayout.setOnRefreshListener(this);
         swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.redA200);
         recyclerView = binding.itemCommentsList;
-//        recyclerView.setLayoutManager(new LinearLayoutManager(getContext())); //TODO vedere se serve
-//        recyclerView.removeItemClickListeners();
-//        recyclerView.setToggleItemOnClick(false);
+        offlineViewLayout = binding.itemOfflineViewLayout.offlineViewLayout;
 
         itemText = binding.itemText;
         titleText = binding.itemTitle;
@@ -148,6 +160,20 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if(connectivityProvider != null)
+            connectivityProvider.addListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        if(connectivityProvider != null)
+            connectivityProvider.removeListener(this);
+        super.onPause();
+    }
+
+    @Override
     public void onDestroy() {
         adapter.dispose();
         super.onDestroy();
@@ -157,7 +183,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
 
     protected void observeItem(final boolean refreshComments) {
         long currentTime = System.currentTimeMillis();
-        if(currentTime - itemViewModel.lastCommentsRefreshTime > Utils.CACHE_EXPIRATION) {
+        if(isConnected && currentTime - itemViewModel.lastCommentsRefreshTime > Utils.CACHE_EXPIRATION) {
             itemViewModel.commentsFound = true;
             showTextNoComments();
             itemViewModel.lastCommentsRefreshTime = currentTime;
@@ -178,26 +204,28 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
     }
 
     protected void observeComments(List<Long> ids) {
-        itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
-            List<Long> newKidsIds = new ArrayList<>();
-            for(Comment comment : comments) {
+        if(isConnected) {
+            itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
+                List<Long> newKidsIds = new ArrayList<>();
+                for (Comment comment : comments) {
 
-                // this null check should prevent the following error when rotating the phone
-                // while downloading comments
-                // Attempt to invoke virtual method 'long[] emilsoft.hackernews.api.Comment.getKids()' on a null object reference
-                if(comment == null)
-                    return;
+                    // this null check should prevent the following error when rotating the phone
+                    // while downloading comments
+                    // Attempt to invoke virtual method 'long[] emilsoft.hackernews.api.Comment.getKids()' on a null object reference
+                    if (comment == null)
+                        return;
 
-                if(adapter != null)
-                    adapter.addItem(comment);
-                long[] kids = comment.getKids();
-                if(kids != null) {
-                    newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+                    if (adapter != null)
+                        adapter.addItem(comment);
+                    long[] kids = comment.getKids();
+                    if (kids != null) {
+                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+                    }
                 }
-            }
-            if(newKidsIds.size() > 0)
-                observeComments(newKidsIds);
-        });
+                if (newKidsIds.size() > 0)
+                    observeComments(newKidsIds);
+            });
+        }
     }
 
     protected void showTextNoComments() {
@@ -207,5 +235,18 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
             noCommentsLayout.setVisibility(View.INVISIBLE);
     }
 
-
+    @Override
+    public void onStateChange(ConnectivityProvider.NetworkState state) {
+        if(connectivityProvider != null) {
+            isConnected = ConnectivityProvider.isStateConnected(connectivityProvider.getNetworkState());
+            if(itemViewModel.commentsList.isEmpty() && !isConnected)
+                offlineViewLayout.setVisibility(View.VISIBLE);
+            if(!itemViewModel.commentsList.isEmpty() && !isConnected)
+                ConnectionSnackbar.showConnectionLostSnackbar(getView());
+            if(isConnected)
+                offlineViewLayout.setVisibility(View.INVISIBLE);
+            if(itemViewModel.commentsList.isEmpty() && isConnected)
+                getItemObserver(true);
+        }
+    }
 }

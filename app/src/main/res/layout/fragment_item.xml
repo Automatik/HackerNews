@@ -268,4 +268,14 @@
             style="@style/NoCommentsTextAppearance"/>
     </LinearLayout>
 
+    <include
+        android:id="@+id/item_offline_view_layout"
+        android:layout_width="200dp"
+        android:layout_height="150dp"
+        android:layout_marginTop="50dp"
+        app:layout_constraintTop_toBottomOf="@id/item_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        layout="@layout/offline_view" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
