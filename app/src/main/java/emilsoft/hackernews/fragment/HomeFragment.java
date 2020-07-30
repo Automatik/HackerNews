@@ -26,6 +26,7 @@ import java.util.Objects;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.adapter.StoriesAdapter;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.api.Type;
 import emilsoft.hackernews.connectivity.ConnectionSnackbar;
 import emilsoft.hackernews.connectivity.ConnectivityProvider;
@@ -185,24 +186,27 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         long currentTime = System.currentTimeMillis();
         if(isConnected && currentTime - homeViewModel.lastIdsRefreshTime > Utils.CACHE_EXPIRATION) {
             homeViewModel.lastIdsRefreshTime = currentTime;
-            homeViewModel.getItemsIds().observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
+            homeViewModel.getItemsIds().observe(getViewLifecycleOwner(), new Observer<ItemResponse<List<Long>>>() {
                 @Override
-                public void onChanged(List<Long> ids) {
-                    homeViewModel.itemsIds.clear();
-                    int size = homeViewModel.items.size();
-                    homeViewModel.items.clear();
-                    if (adapter != null)
-                        adapter.notifyItemRangeRemoved(0, size);
-                    homeViewModel.itemsIds.addAll(ids);
-                    homeViewModel.lastItemLoadedIndex = 0;
-                    //homeViewModel.start1 = System.nanoTime();
-                    //for (int i = 0; i < NUM_LOAD_ITEMS; i++) {
-                    //    observeItem(ids.get(i));
-                    //}
-                    observeItems(ids.subList(0, NUM_LOAD_ITEMS));
-                    homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
-                    preFetchUrls(0, homeViewModel.lastItemLoadedIndex);
-                    swipeRefreshLayout.setRefreshing(false);
+                public void onChanged(ItemResponse<List<Long>> response) {
+                    if(response.isSuccess()) {
+                        List<Long> ids = response.getData();
+                        homeViewModel.itemsIds.clear();
+                        int size = homeViewModel.items.size();
+                        homeViewModel.items.clear();
+                        if (adapter != null)
+                            adapter.notifyItemRangeRemoved(0, size);
+                        homeViewModel.itemsIds.addAll(ids);
+                        homeViewModel.lastItemLoadedIndex = 0;
+                        //homeViewModel.start1 = System.nanoTime();
+                        //for (int i = 0; i < NUM_LOAD_ITEMS; i++) {
+                        //    observeItem(ids.get(i));
+                        //}
+                        observeItems(ids.subList(0, NUM_LOAD_ITEMS));
+                        homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
+                        preFetchUrls(0, homeViewModel.lastItemLoadedIndex);
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
                 }
             });
         } else {
@@ -211,7 +215,9 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     private void observeItem(long id) {
-        homeViewModel.getItem(id).observe(this, (item) -> {
+        homeViewModel.getItem(id).observe(this, (response) -> {
+            if(response.isSuccess()) {
+                Item item = response.getData();
                 if(!homeViewModel.items.contains(item)) {
                     int pos = homeViewModel.items.size();
                     homeViewModel.items.add(item);
@@ -220,18 +226,22 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
                 //homeViewModel.stop1 = System.nanoTime();
                 //Log.v(MainActivity.TAG, "getStory: " + (((homeViewModel.stop1-homeViewModel.start1)/(double)1000000))+ " ms");
+            }
         });
     }
 
     private void observeItems(List<Long> ids) {
         if(isConnected) {
-            homeViewModel.getItems(ids).observe(this, (items -> {
-                for(Item item : items) {
-                    if(!homeViewModel.items.contains(item)) {
-                        int pos = homeViewModel.items.size();
-                        homeViewModel.items.add(item);
-                        if(adapter != null)
-                            adapter.notifyItemInserted(pos);
+            homeViewModel.getItems(ids).observe(this, (response -> {
+                if(response.isSuccess()) {
+                    List<? extends Item> items = response.getData();
+                    for(Item item : items) {
+                        if(!homeViewModel.items.contains(item)) {
+                            int pos = homeViewModel.items.size();
+                            homeViewModel.items.add(item);
+                            if(adapter != null)
+                                adapter.notifyItemInserted(pos);
+                        }
                     }
                 }
             }));

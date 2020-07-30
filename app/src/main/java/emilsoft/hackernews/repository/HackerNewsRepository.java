@@ -13,22 +13,18 @@ import emilsoft.hackernews.MainActivity;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.HackerNewsApi;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.api.RetrofitException;
 import emilsoft.hackernews.api.RetrofitHelper;
 import emilsoft.hackernews.api.Story;
-import emilsoft.hackernews.api.Type;
-import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
-import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.ResponseBody;
 
 public class HackerNewsRepository {
 
@@ -45,60 +41,67 @@ public class HackerNewsRepository {
         return instance;
     }
 
-    public LiveData<List<Long>> getTopStoriesIds() {
-        return getStoriesIds(hackerNewsApi.getTopStories());
+    public LiveData<ItemResponse<List<Long>>> getTopStoriesIds() {
+        return getItemsIds(hackerNewsApi.getTopStories());
     }
 
-    public LiveData<List<Long>> getNewStoriesIds() {
-        return getStoriesIds(hackerNewsApi.getNewStories());
+    public LiveData<ItemResponse<List<Long>>> getNewStoriesIds() {
+        return getItemsIds(hackerNewsApi.getNewStories());
     }
 
-    public LiveData<List<Long>> getBestStoriesIds() {
-        return getStoriesIds(hackerNewsApi.getBestStories());
+    public LiveData<ItemResponse<List<Long>>> getBestStoriesIds() {
+        return getItemsIds(hackerNewsApi.getBestStories());
     }
 
-    public LiveData<List<Long>> getAskStoriesIds() {
-        return getStoriesIds(hackerNewsApi.getAskStories());
+    public LiveData<ItemResponse<List<Long>>> getAskStoriesIds() {
+        return getItemsIds(hackerNewsApi.getAskStories());
     }
 
-    public LiveData<List<Long>> getShowStoriesIds() {
-        return getStoriesIds(hackerNewsApi.getShowStories());
+    public LiveData<ItemResponse<List<Long>>> getShowStoriesIds() {
+        return getItemsIds(hackerNewsApi.getShowStories());
     }
 
-    public LiveData<List<Long>> getJobStoriesIds() {
-        return getStoriesIds(hackerNewsApi.getJobStories());
+    public LiveData<ItemResponse<List<Long>>> getJobStoriesIds() {
+        return getItemsIds(hackerNewsApi.getJobStories());
     }
 
-    private LiveData<List<Long>> getStoriesIds(Observable<List<Long>> observable) {
-        final MutableLiveData<List<Long>> data = new MutableLiveData<>();
+    private LiveData<ItemResponse<List<Long>>> getItemsIds(Observable<List<Long>> observable) {
+        final MutableLiveData<ItemResponse<List<Long>>> data = new MutableLiveData<>();
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<List<Long>>() {
                     @Override
-                    public void onSubscribe(Disposable d) {}
+                    public void onSubscribe(Disposable d) {
+
+                    }
 
                     @Override
                     public void onNext(List<Long> ids) {
                         if(ids == null)
                             return;
-                        data.setValue(ids);
+                        ItemResponse<List<Long>> response = new ItemResponse<>();
+                        response.setIsSuccess(ids);
+                        data.setValue(response);
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
-                        RetrofitException error = (RetrofitException) e;
-                        Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ error.getResponse());
+                        ItemResponse<List<Long>> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
 
                     @Override
-                    public void onComplete() {}
+                    public void onComplete() {
+
+                    }
                 });
         return data;
     }
 
-    public LiveData<Story> getStory(long id) {
-        final MutableLiveData<Story> data = new MutableLiveData<>();
+    public LiveData<ItemResponse<Story>> getStory(long id) {
+        final MutableLiveData<ItemResponse<Story>> data = new MutableLiveData<>();
         hackerNewsApi.getStory(id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -107,6 +110,9 @@ public class HackerNewsRepository {
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
+                        ItemResponse<Story> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
 
                     @Override
@@ -121,14 +127,16 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onNext(Story story) {
-                        data.setValue(story);
+                        ItemResponse<Story> response = new ItemResponse<>();
+                        response.setIsSuccess(story);
+                        data.setValue(response);
                     }
                 });
         return data;
     }
 
-    public LiveData<List<Story>> getStories(List<Long> ids) {
-        final MutableLiveData<List<Story>> data = new MutableLiveData<>();
+    public LiveData<ItemResponse<List<Story>>> getStories(List<Long> ids) {
+        final MutableLiveData<ItemResponse<List<Story>>> data = new MutableLiveData<>();
         List<Observable<Story>> observables = new ArrayList<>(ids.size());
         for (Long id : ids)
 //            observables.add(Observable.defer(() -> hackerNewsApi.getStory(id)));
@@ -152,12 +160,16 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onNext(List<Story> stories) {
-                        data.setValue(stories);
+                        ItemResponse<List<Story>> response = new ItemResponse<>();
+                        response.setIsSuccess(stories);
+                        data.setValue(response);
                     }
 
                     @Override
                     public void onError(Throwable e) {
-
+                        ItemResponse<List<Story>> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
 
                     @Override
@@ -168,8 +180,8 @@ public class HackerNewsRepository {
         return data;
     }
 
-    public LiveData<? extends Item> getItem(long id) {
-        final MutableLiveData<Item> data = new MutableLiveData<>();
+    public LiveData<ItemResponse<? extends Item>> getItem(long id) {
+        final MutableLiveData<ItemResponse<? extends Item>> data = new MutableLiveData<>();
         hackerNewsApi.getItem(id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -181,12 +193,17 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onNext(Item item) {
-                        data.setValue(item);
+                        ItemResponse<Item> response = new ItemResponse<>();
+                        response.setIsSuccess(item);
+                        data.setValue(response);
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
+                        ItemResponse<Item> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
 
                     @Override
@@ -197,8 +214,8 @@ public class HackerNewsRepository {
         return data;
     }
 
-    public LiveData<List<? extends Item>> getItems(List<Long> ids) {
-        final MutableLiveData<List<? extends Item>> data = new MutableLiveData<>();
+    public LiveData<ItemResponse<List<? extends Item>>> getItems(List<Long> ids) {
+        final MutableLiveData<ItemResponse<List<? extends Item>>> data = new MutableLiveData<>();
         Observable.fromIterable(ids)
                 .flatMap((id) -> hackerNewsApi.getItem(id).subscribeOn(Schedulers.io()))
                 .map(item -> {
@@ -218,14 +235,17 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onSuccess(List<Item> items) {
-                        data.setValue(items);
+                        ItemResponse<List<? extends Item>> response = new ItemResponse<>();
+                        response.setIsSuccess(items);
+                        data.setValue(response);
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ Log.getStackTraceString(e));
-                        RetrofitException error = (RetrofitException) e;
-                        Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ error.getResponse());
+                        ItemResponse<List<? extends Item>> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
                 });
 
@@ -271,8 +291,8 @@ public class HackerNewsRepository {
         return data;
     }
 
-    public LiveData<Job> getJob(long id) {
-        final MutableLiveData<Job> data = new MutableLiveData<>();
+    public LiveData<ItemResponse<Job>> getJob(long id) {
+        final MutableLiveData<ItemResponse<Job>> data = new MutableLiveData<>();
         hackerNewsApi.getJob(id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -284,12 +304,17 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onNext(Job job) {
-                        data.setValue(job);
+                        ItemResponse<Job> response = new ItemResponse<>();
+                        response.setIsSuccess(job);
+                        data.setValue(response);
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        e.printStackTrace();
+                        Log.v(MainActivity.TAG, "HackerNewsRepository/getJob/ "+ Log.getStackTraceString(e));
+                        ItemResponse<Job> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
 
                     @Override
@@ -300,8 +325,8 @@ public class HackerNewsRepository {
         return data;
     }
 
-    public LiveData<Comment> getComment(long id) {
-        final MutableLiveData<Comment> data = new MutableLiveData<>();
+    public LiveData<ItemResponse<Comment>> getComment(long id) {
+        final MutableLiveData<ItemResponse<Comment>> data = new MutableLiveData<>();
         hackerNewsApi.getComment(id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -309,7 +334,10 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onError(Throwable e) {
-                        e.printStackTrace();
+                        Log.v(MainActivity.TAG, "HackerNewsRepository/getComment/ "+ Log.getStackTraceString(e));
+                        ItemResponse<Comment> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
 
                     @Override
@@ -324,15 +352,17 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onNext(Comment comment) {
-                        data.setValue(comment);
+                        ItemResponse<Comment> response = new ItemResponse<>();
+                        response.setIsSuccess(comment);
+                        data.setValue(response);
                     }
                 });
 
         return data;
     }
 
-    public LiveData<List<Comment>> getComments(List<Long> ids) {
-        final MutableLiveData<List<Comment>> data = new MutableLiveData<>();
+    public LiveData<ItemResponse<List<Comment>>> getComments(List<Long> ids) {
+        final MutableLiveData<ItemResponse<List<Comment>>> data = new MutableLiveData<>();
         Observable.fromIterable(ids)
                 // use concatMap if we want to preserve order instead
                 .flatMap((id) -> hackerNewsApi.getComment(id).subscribeOn(Schedulers.io()))
@@ -347,14 +377,17 @@ public class HackerNewsRepository {
 
                     @Override
                     public void onSuccess(List<Comment> commentList) {
-                        data.setValue(commentList);
+                        ItemResponse<List<Comment>> response = new ItemResponse<>();
+                        response.setIsSuccess(commentList);
+                        data.setValue(response);
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getComments/ "+ Log.getStackTraceString(e));
-                        RetrofitException error = (RetrofitException) e;
-                        Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ error.getResponse());
+                        ItemResponse<List<Comment>> response = new ItemResponse<>();
+                        response.setIsFailed(e);
+                        data.setValue(response);
                     }
                 });
 

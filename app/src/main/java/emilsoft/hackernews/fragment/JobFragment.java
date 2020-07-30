@@ -26,6 +26,7 @@ import java.util.List;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.api.Job;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentItemBinding;
@@ -167,14 +168,17 @@ public class JobFragment extends BaseItemFragment {
     }
 
     @Override
-    protected Observer<Item> getItemObserver(boolean refreshComments) {
-        return new Observer<Item>() {
+    protected Observer<ItemResponse<? extends Item>> getItemObserver(boolean refreshComments) {
+        return new Observer<ItemResponse<? extends Item>>() {
             @Override
-            public void onChanged(Item item) {
-                if(item instanceof Job) {
-                    Job job = (Job) item;
-                    itemViewModel.commentsFound = false;
-                    showTextNoComments();
+            public void onChanged(ItemResponse<? extends Item> response) {
+                if(response.isSuccess()) {
+                    Item item = response.getData();
+                    if(item instanceof Job) {
+                        Job job = (Job) item;
+                        itemViewModel.commentsFound = false;
+                        showTextNoComments();
+                    }
                 }
             }
         };

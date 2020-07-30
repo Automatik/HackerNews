@@ -1,13 +1,11 @@
 package emilsoft.hackernews.api;
 
 import androidx.annotation.Nullable;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 public class ItemResponse<T> {
 
-    @Nullable private LiveData<T> data;
-    @Nullable private Throwable error;
+    private T data;
+    private Throwable error;
     private boolean isSuccess;
 
     public ItemResponse() {
@@ -16,7 +14,7 @@ public class ItemResponse<T> {
         isSuccess = false;
     }
 
-    public void setIsSuccess(LiveData<T> data) {
+    public void setIsSuccess(T data) {
         this.data = data;
         error = null;
         isSuccess = true;
@@ -32,18 +30,12 @@ public class ItemResponse<T> {
         return isSuccess;
     }
 
-    public LiveData<T> getData() {
-        if(isSuccess)
-            return data;
-        else {
-            MutableLiveData<T> errorData = new MutableLiveData<>();
-            errorData.setValue(null);
-            return errorData;
-        }
+    public T getData() {
+        return data;
     }
 
     public Throwable getError() {
-        return (isSuccess) ? null : error;
+        return error;
     }
 
 }

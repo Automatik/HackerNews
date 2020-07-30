@@ -10,6 +10,7 @@ import java.util.List;
 
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.api.MultiLevelData;
 import emilsoft.hackernews.api.RecyclerViewItem;
 import emilsoft.hackernews.repository.HackerNewsRepository;
@@ -35,14 +36,14 @@ public class ItemViewModel extends ViewModel {
 //        collapsedChildren = new HashMap<>();
     }
 
-    public LiveData<? extends Item> getItem() {
+    public LiveData<ItemResponse<? extends Item>> getItem() {
         if(item != null)
             return repository.getItem(item.getId());
         return null;
     }
 
-    public LiveData<List<Comment>> getComments(List<Long> ids) { return repository.getComments(ids); }
+    public LiveData<ItemResponse<List<Comment>>> getComments(List<Long> ids) { return repository.getComments(ids); }
 
-    public LiveData<Comment> getComment(long id) { return repository.getComment(id); }
+    public LiveData<ItemResponse<Comment>> getComment(long id) { return repository.getComment(id); }
 
 }

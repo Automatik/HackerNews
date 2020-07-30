@@ -20,6 +20,7 @@ import java.util.List;
 
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.api.Story;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 
@@ -106,24 +107,27 @@ public class StoryFragment extends BaseItemFragment {
     }
 
     @Override
-    protected Observer<Item> getItemObserver(boolean refreshComments) {
-        return new Observer<Item>() {
+    protected Observer<ItemResponse<? extends Item>> getItemObserver(boolean refreshComments) {
+        return new Observer<ItemResponse<? extends Item>>() {
             @Override
-            public void onChanged(Item item) {
-                if(item instanceof Story) {
-                    Story story = (Story) item;
-                    if(story.getKids() == null || story.getKids().length == 0) {
-                        itemViewModel.commentsFound = false;
-                        showTextNoComments();
-                    }
-                    if(refreshComments) {
-                        int size = itemViewModel.commentsList.size();
-                        itemViewModel.commentsList.clear();
-//                        int size = itemViewModel.multiLevelData.itemsSize();
-//                        itemViewModel.multiLevelData.clear();
-                        if(adapter != null)
-                            adapter.notifyItemRangeRemoved(0, size);
-                        startObservingComments(story.getKids());
+            public void onChanged(ItemResponse<? extends Item> response) {
+                if(response.isSuccess()) {
+                    Item item = response.getData();
+                    if(item instanceof Story) {
+                        Story story = (Story) item;
+                        if(story.getKids() == null || story.getKids().length == 0) {
+                            itemViewModel.commentsFound = false;
+                            showTextNoComments();
+                        }
+                        if(refreshComments) {
+                            int size = itemViewModel.commentsList.size();
+                            itemViewModel.commentsList.clear();
+//                          int size = itemViewModel.multiLevelData.itemsSize();
+//                          itemViewModel.multiLevelData.clear();
+                            if(adapter != null)
+                                adapter.notifyItemRangeRemoved(0, size);
+                            startObservingComments(story.getKids());
+                        }
                     }
                 }
             }

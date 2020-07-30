@@ -38,6 +38,7 @@ import emilsoft.hackernews.adapter.CommentsAdapter;
 import emilsoft.hackernews.adapter.MultiCommentsAdapter;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.Item;
+import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.connectivity.ConnectionSnackbar;
 import emilsoft.hackernews.connectivity.ConnectivityProvider;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
@@ -193,7 +194,7 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
         }
     }
 
-    protected abstract Observer<Item> getItemObserver(final boolean refreshComments);
+    protected abstract Observer<ItemResponse<? extends Item>> getItemObserver(final boolean refreshComments);
 
     protected void startObservingComments(long[] kids) {
         if(kids == null || kids.length == 0)
@@ -205,25 +206,28 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
 
     protected void observeComments(List<Long> ids) {
         if(isConnected) {
-            itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), comments -> {
-                List<Long> newKidsIds = new ArrayList<>();
-                for (Comment comment : comments) {
+            itemViewModel.getComments(ids).observe(getViewLifecycleOwner(), response -> {
+                if(response.isSuccess()) {
+                    List<Comment> comments = response.getData();
+                    List<Long> newKidsIds = new ArrayList<>();
+                    for (Comment comment : comments) {
 
-                    // this null check should prevent the following error when rotating the phone
-                    // while downloading comments
-                    // Attempt to invoke virtual method 'long[] emilsoft.hackernews.api.Comment.getKids()' on a null object reference
-                    if (comment == null)
-                        return;
+                        // this null check should prevent the following error when rotating the phone
+                        // while downloading comments
+                        // Attempt to invoke virtual method 'long[] emilsoft.hackernews.api.Comment.getKids()' on a null object reference
+                        if (comment == null)
+                            return;
 
-                    if (adapter != null)
-                        adapter.addItem(comment);
-                    long[] kids = comment.getKids();
-                    if (kids != null) {
-                        newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+                        if (adapter != null)
+                            adapter.addItem(comment);
+                        long[] kids = comment.getKids();
+                        if (kids != null) {
+                            newKidsIds.addAll(LongStream.of(kids).boxed().collect(Collectors.toList()));
+                        }
                     }
+                    if (newKidsIds.size() > 0)
+                        observeComments(newKidsIds);
                 }
-                if (newKidsIds.size() > 0)
-                    observeComments(newKidsIds);
             });
         }
     }
