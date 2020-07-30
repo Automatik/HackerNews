@@ -28,6 +28,7 @@ import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.api.Job;
+import emilsoft.hackernews.connectivity.ConnectionSnackbar;
 import emilsoft.hackernews.customtabs.CustomTabActivityHelper;
 import emilsoft.hackernews.databinding.FragmentItemBinding;
 
@@ -179,6 +180,9 @@ public class JobFragment extends BaseItemFragment {
                         itemViewModel.commentsFound = false;
                         showTextNoComments();
                     }
+                } else {
+                    String message = Utils.getMessageErrorFromRetrofitException(response.getError());
+                    ConnectionSnackbar.showErrorMessageSnackbar(getView(), message);
                 }
             }
         };

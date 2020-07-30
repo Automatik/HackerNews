@@ -23,6 +23,7 @@ import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.ItemResponse;
 import emilsoft.hackernews.api.Story;
+import emilsoft.hackernews.connectivity.ConnectionSnackbar;
 import emilsoft.hackernews.databinding.FragmentItemBinding;
 
 public class AskFragment extends BaseItemFragment {
@@ -158,6 +159,9 @@ public class AskFragment extends BaseItemFragment {
                             startObservingComments(askStory.getKids());
                         }
                     }
+                } else {
+                    String message = Utils.getMessageErrorFromRetrofitException(response.getError());
+                    ConnectionSnackbar.showErrorMessageSnackbar(getView(), message);
                 }
             }
         };

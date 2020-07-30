@@ -19,8 +19,6 @@ import java.util.List;
 import emilsoft.hackernews.R;
 import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.api.Comment;
-import emilsoft.hackernews.api.MultiLevelData;
-import emilsoft.hackernews.api.RecyclerViewItem;
 import emilsoft.hackernews.databinding.CommentsListItemBinding;
 
 public class MultiCommentsAdapter extends MultiLevelAdapter<Comment, MultiCommentsAdapter.ViewHolder> {

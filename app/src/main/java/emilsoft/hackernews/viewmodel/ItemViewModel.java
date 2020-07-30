@@ -11,11 +11,7 @@ import java.util.List;
 import emilsoft.hackernews.api.Comment;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.ItemResponse;
-import emilsoft.hackernews.api.MultiLevelData;
-import emilsoft.hackernews.api.RecyclerViewItem;
 import emilsoft.hackernews.repository.HackerNewsRepository;
-import io.reactivex.Observable;
-import io.reactivex.Observer;
 
 public class ItemViewModel extends ViewModel {
 

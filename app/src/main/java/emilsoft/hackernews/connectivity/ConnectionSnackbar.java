@@ -12,4 +12,9 @@ public class ConnectionSnackbar {
         snackbar.show();
     }
 
+    public static void showErrorMessageSnackbar(View view, String message) {
+        Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_SHORT);
+        snackbar.show();
+    }
+
 }

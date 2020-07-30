@@ -27,6 +27,7 @@ import emilsoft.hackernews.Utils;
 import emilsoft.hackernews.adapter.StoriesAdapter;
 import emilsoft.hackernews.api.Item;
 import emilsoft.hackernews.api.ItemResponse;
+import emilsoft.hackernews.api.RetrofitException;
 import emilsoft.hackernews.api.Type;
 import emilsoft.hackernews.connectivity.ConnectionSnackbar;
 import emilsoft.hackernews.connectivity.ConnectivityProvider;
@@ -206,6 +207,9 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                         homeViewModel.lastItemLoadedIndex += NUM_LOAD_ITEMS - 1;
                         preFetchUrls(0, homeViewModel.lastItemLoadedIndex);
                         swipeRefreshLayout.setRefreshing(false);
+                    } else {
+                        String message = Utils.getMessageErrorFromRetrofitException(response.getError());
+                        ConnectionSnackbar.showErrorMessageSnackbar(getView(), message);
                     }
                 }
             });
@@ -226,6 +230,9 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
                 //homeViewModel.stop1 = System.nanoTime();
                 //Log.v(MainActivity.TAG, "getStory: " + (((homeViewModel.stop1-homeViewModel.start1)/(double)1000000))+ " ms");
+            } else {
+                String message = Utils.getMessageErrorFromRetrofitException(response.getError());
+                ConnectionSnackbar.showErrorMessageSnackbar(getView(), message);
             }
         });
     }
@@ -243,6 +250,9 @@ public class HomeFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                                 adapter.notifyItemInserted(pos);
                         }
                     }
+                } else {
+                    String message = Utils.getMessageErrorFromRetrofitException(response.getError());
+                    ConnectionSnackbar.showErrorMessageSnackbar(getView(), message);
                 }
             }));
         }

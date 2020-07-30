@@ -5,6 +5,8 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -23,7 +25,10 @@ import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.exceptions.UndeliverableException;
+import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
 public class HackerNewsRepository {
@@ -38,6 +43,10 @@ public class HackerNewsRepository {
     public synchronized static HackerNewsRepository getInstance() {
         if(instance == null)
             instance = new HackerNewsRepository();
+        // consume because I already handle errors in onError
+        // this is needed, otherwise UndeliverableException is thrown by RxJava
+        // https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
+        RxJavaPlugins.setErrorHandler(errorHandlerConsumer);
         return instance;
     }
 
@@ -88,7 +97,7 @@ public class HackerNewsRepository {
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                         ItemResponse<List<Long>> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
 
@@ -111,7 +120,7 @@ public class HackerNewsRepository {
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                         ItemResponse<Story> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
 
@@ -168,7 +177,7 @@ public class HackerNewsRepository {
                     @Override
                     public void onError(Throwable e) {
                         ItemResponse<List<Story>> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
 
@@ -202,7 +211,7 @@ public class HackerNewsRepository {
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, Objects.requireNonNull(e.getMessage()));
                         ItemResponse<Item> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
 
@@ -244,7 +253,7 @@ public class HackerNewsRepository {
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getItems/ "+ Log.getStackTraceString(e));
                         ItemResponse<List<? extends Item>> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
                 });
@@ -313,7 +322,7 @@ public class HackerNewsRepository {
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getJob/ "+ Log.getStackTraceString(e));
                         ItemResponse<Job> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
 
@@ -336,7 +345,7 @@ public class HackerNewsRepository {
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getComment/ "+ Log.getStackTraceString(e));
                         ItemResponse<Comment> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
 
@@ -386,7 +395,7 @@ public class HackerNewsRepository {
                     public void onError(Throwable e) {
                         Log.v(MainActivity.TAG, "HackerNewsRepository/getComments/ "+ Log.getStackTraceString(e));
                         ItemResponse<List<Comment>> response = new ItemResponse<>();
-                        response.setIsFailed(e);
+                        response.setIsFailed((RetrofitException) e);
                         data.setValue(response);
                     }
                 });
@@ -430,5 +439,35 @@ public class HackerNewsRepository {
 //                });
         return data;
     }
+
+    private static Consumer<Throwable> errorHandlerConsumer = new Consumer<Throwable>() {
+        @Override
+        public void accept(Throwable e) throws Exception {
+            if (e instanceof UndeliverableException) {
+                e = e.getCause();
+            }
+            if (e instanceof IOException) {
+                // fine, irrelevant network problem or API that throws on cancellation
+                return;
+            }
+            if (e instanceof InterruptedException) {
+                // fine, some blocking code was interrupted by a dispose call
+                return;
+            }
+            if ((e instanceof NullPointerException) || (e instanceof IllegalArgumentException)) {
+                // that's likely a bug in the application
+                Thread.currentThread().getUncaughtExceptionHandler()
+                        .uncaughtException(Thread.currentThread(), e);
+                return;
+            }
+            if (e instanceof IllegalStateException) {
+                // that's a bug in RxJava or in a custom operator
+                Thread.currentThread().getUncaughtExceptionHandler()
+                        .uncaughtException(Thread.currentThread(), e);
+                return;
+            }
+            Log.v(MainActivity.TAG, "Undeliverable exception received, not sure what to do", e);
+        }
+    };
 
 }

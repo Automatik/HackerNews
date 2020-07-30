@@ -227,6 +227,9 @@ public abstract class BaseItemFragment extends Fragment implements SwipeRefreshL
                     }
                     if (newKidsIds.size() > 0)
                         observeComments(newKidsIds);
+                } else {
+                    String message = Utils.getMessageErrorFromRetrofitException(response.getError());
+                    ConnectionSnackbar.showErrorMessageSnackbar(getView(), message);
                 }
             });
         }

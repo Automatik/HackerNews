@@ -1,9 +1,7 @@
 package emilsoft.hackernews;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -12,7 +10,6 @@ import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.util.Log;
 
 import androidx.browser.customtabs.CustomTabsService;
 import androidx.core.content.ContextCompat;
@@ -23,8 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import emilsoft.hackernews.api.HackerNewsApi;
-
-import static emilsoft.hackernews.MainActivity.TAG;
+import emilsoft.hackernews.api.RetrofitException;
 
 public class Utils {
 
@@ -124,6 +120,15 @@ public class Utils {
             }
         }
         return uriBundles;
+    }
+
+    public static String getMessageErrorFromRetrofitException(RetrofitException exception) {
+        switch (exception.getKind()) {
+            case HTTP: return "news.ycombinator.com not responding!";
+            case NETWORK: return "Connection error!";
+            case UNEXPECTED:
+            default: return "Unable to retrieve data!";
+        }
     }
 
 }

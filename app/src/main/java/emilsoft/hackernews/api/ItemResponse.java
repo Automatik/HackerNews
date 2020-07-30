@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 public class ItemResponse<T> {
 
     private T data;
-    private Throwable error;
+    private RetrofitException error;
     private boolean isSuccess;
 
     public ItemResponse() {
@@ -20,7 +20,7 @@ public class ItemResponse<T> {
         isSuccess = true;
     }
 
-    public void setIsFailed(Throwable error) {
+    public void setIsFailed(RetrofitException error) {
         this.error = error;
         data = null;
         isSuccess = false;
@@ -34,7 +34,7 @@ public class ItemResponse<T> {
         return data;
     }
 
-    public Throwable getError() {
+    public RetrofitException getError() {
         return error;
     }
 
